@@ -1,0 +1,102 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { TenantContext } from '../../common/tenant/tenant-context';
+import { TenantScopedService } from '../../common/tenant/tenant-scoped.service';
+import { generateDocumentNumber } from '../../common/utils/document-number-generator.util';
+import { CreditNote } from './entities/credit-note.entity';
+import { Sale } from '../sales/entities/sale.entity';
+import { Stock } from '../inventory/stock/entities/stock.entity';
+import { Voucher, VoucherStatus } from '../vouchers/entities/voucher.entity';
+import {
+  CreateCreditNoteDto,
+  RestockLineInputDto,
+} from './dto/create-credit-note.dto';
+
+@Injectable()
+export class CreditNotesService extends TenantScopedService<CreditNote> {
+  constructor(
+    @InjectRepository(CreditNote) repository: Repository<CreditNote>,
+    private readonly dataSource: DataSource,
+    tenantContext: TenantContext,
+  ) {
+    super(repository, tenantContext);
+  }
+
+  async createCreditNote(dto: CreateCreditNoteDto): Promise<CreditNote> {
+    return this.dataSource.transaction(async (manager) => {
+      const saleRepo = manager.getRepository(Sale);
+      const sale = await saleRepo.findOne({
+        where: { id: dto.saleId, businessId: this.tenantContext.businessId },
+      });
+      if (!sale) {
+        throw new BadRequestException(`Venta ${dto.saleId} no encontrada`);
+      }
+
+      let voucherId: string | null = null;
+      if (dto.generateVoucher) {
+        const voucherRepo = manager.getRepository(Voucher);
+        const voucher = await voucherRepo.save(
+          voucherRepo.create({
+            businessId: this.tenantContext.businessId,
+            code: generateDocumentNumber('VL'),
+            customerId: dto.customerId ?? null,
+            amount: dto.amount,
+            balance: dto.amount,
+            status: VoucherStatus.ACTIVE,
+            reason: dto.reason ?? 'Nota crédito',
+          }),
+        );
+        voucherId = voucher.id;
+      }
+
+      const noteRepo = manager.getRepository(CreditNote);
+      const note = await noteRepo.save(
+        noteRepo.create({
+          businessId: this.tenantContext.businessId,
+          number: generateDocumentNumber('NC'),
+          saleId: dto.saleId,
+          customerId: dto.customerId ?? null,
+          type: dto.type,
+          amount: dto.amount,
+          reason: dto.reason ?? null,
+          restock: dto.restock ?? false,
+          voucherId,
+        }),
+      );
+
+      if (dto.restock && dto.restockLines?.length) {
+        const stockRepo = manager.getRepository(Stock);
+        for (const line of dto.restockLines) {
+          await this.incrementStock(stockRepo, line);
+        }
+      }
+
+      return note;
+    });
+  }
+
+  private async incrementStock(
+    stockRepo: Repository<Stock>,
+    line: RestockLineInputDto,
+  ): Promise<void> {
+    const where = line.variantId
+      ? { variantId: line.variantId, warehouseId: line.warehouseId }
+      : { productId: line.productId, warehouseId: line.warehouseId };
+
+    const stock = await stockRepo.findOne({ where });
+    if (stock) {
+      stock.quantity = Number(stock.quantity) + line.quantity;
+      await stockRepo.save(stock);
+    } else {
+      await stockRepo.save(
+        stockRepo.create({
+          variantId: line.variantId ?? null,
+          productId: line.productId ?? null,
+          warehouseId: line.warehouseId,
+          quantity: line.quantity,
+        }),
+      );
+    }
+  }
+}
