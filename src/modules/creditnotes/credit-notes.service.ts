@@ -1,12 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
 import { TenantScopedService } from '../../common/tenant/tenant-scoped.service';
 import { generateDocumentNumber } from '../../common/utils/document-number-generator.util';
 import { CreditNote } from './entities/credit-note.entity';
 import { Sale } from '../sales/entities/sale.entity';
 import { Stock } from '../inventory/stock/entities/stock.entity';
+import { StockMovementType } from '../inventory/stock/entities/stock-movement.entity';
+import { StockMovementsService } from '../inventory/stock/stock-movements.service';
 import { Voucher, VoucherStatus } from '../vouchers/entities/voucher.entity';
 import {
   CreateCreditNoteDto,
@@ -18,6 +20,7 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
   constructor(
     @InjectRepository(CreditNote) repository: Repository<CreditNote>,
     private readonly dataSource: DataSource,
+    private readonly stockMovementsService: StockMovementsService,
     tenantContext: TenantContext,
   ) {
     super(repository, tenantContext);
@@ -68,7 +71,7 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
       if (dto.restock && dto.restockLines?.length) {
         const stockRepo = manager.getRepository(Stock);
         for (const line of dto.restockLines) {
-          await this.incrementStock(stockRepo, line);
+          await this.incrementStock(stockRepo, line, note.id, manager);
         }
       }
 
@@ -79,17 +82,21 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
   private async incrementStock(
     stockRepo: Repository<Stock>,
     line: RestockLineInputDto,
+    creditNoteId: string,
+    manager: EntityManager,
   ): Promise<void> {
     const where = line.variantId
       ? { variantId: line.variantId, warehouseId: line.warehouseId }
       : { productId: line.productId, warehouseId: line.warehouseId };
 
-    const stock = await stockRepo.findOne({ where });
+    let stock = await stockRepo.findOne({ where });
+    const before = stock ? Number(stock.quantity) : 0;
+
     if (stock) {
-      stock.quantity = Number(stock.quantity) + line.quantity;
-      await stockRepo.save(stock);
+      stock.quantity = before + line.quantity;
+      stock = await stockRepo.save(stock);
     } else {
-      await stockRepo.save(
+      stock = await stockRepo.save(
         stockRepo.create({
           variantId: line.variantId ?? null,
           productId: line.productId ?? null,
@@ -98,5 +105,21 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
         }),
       );
     }
+
+    await this.stockMovementsService.record(
+      {
+        businessId: this.tenantContext.businessId,
+        variantId: line.variantId,
+        productId: line.productId,
+        warehouseId: line.warehouseId,
+        quantityDelta: line.quantity,
+        quantityAfter: Number(stock.quantity),
+        type: StockMovementType.CREDIT_NOTE_RESTOCK,
+        refType: 'credit_note',
+        refId: creditNoteId,
+        userId: this.tenantContext.currentUser?.userId,
+      },
+      manager,
+    );
   }
 }

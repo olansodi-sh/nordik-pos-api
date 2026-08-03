@@ -10,6 +10,7 @@ import { CustomersModule } from '../customers/customers.module';
 import { PricingModule } from '../pricing/pricing.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { LoyaltyModule } from '../loyalty/loyalty.module';
+import { StockModule } from '../inventory/stock/stock.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LoyaltyModule } from '../loyalty/loyalty.module';
     PricingModule,
     PromotionsModule,
     LoyaltyModule,
+    StockModule,
   ],
   controllers: [SalesController],
   providers: [SalesService],

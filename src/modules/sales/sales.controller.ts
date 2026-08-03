@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { SalesService } from './sales.service';
-import { CreateSaleDto } from './dto/create-sale.dto';
+import { AddSaleLinesDto, CreateSaleDto } from './dto/create-sale.dto';
+import { VoidSaleDto } from './dto/void-sale.dto';
 
 @Controller('sales')
 export class SalesController {
@@ -29,5 +30,17 @@ export class SalesController {
   @Post()
   create(@Body() dto: CreateSaleDto) {
     return this.salesService.createSale(dto);
+  }
+
+  @RequirePermissions('sales.write')
+  @Post(':id/lines')
+  addLines(@Param('id') id: string, @Body() dto: AddSaleLinesDto) {
+    return this.salesService.addLines(id, dto);
+  }
+
+  @RequirePermissions('sales.write')
+  @Post(':id/void')
+  voidSale(@Param('id') id: string, @Body() dto: VoidSaleDto) {
+    return this.salesService.voidSale(id, dto);
   }
 }

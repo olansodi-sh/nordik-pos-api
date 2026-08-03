@@ -30,6 +30,7 @@ import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { CreditNotesModule } from './modules/creditnotes/credit-notes.module';
 import { RecurringInvoicesModule } from './modules/recurring-invoices/recurring-invoices.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     CreditNotesModule,
     RecurringInvoicesModule,
     TasksModule,
+    ExpensesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

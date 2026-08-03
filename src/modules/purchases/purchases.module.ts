@@ -14,6 +14,7 @@ import { DebitNotesController } from './debit-notes.controller';
 import { SuppliersModule } from '../suppliers/suppliers.module';
 import { WarehousesModule } from '../inventory/warehouses/warehouses.module';
 import { ProductsModule } from '../products/products.module';
+import { StockModule } from '../inventory/stock/stock.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProductsModule } from '../products/products.module';
     SuppliersModule,
     WarehousesModule,
     ProductsModule,
+    StockModule,
   ],
   controllers: [
     PurchaseOrdersController,

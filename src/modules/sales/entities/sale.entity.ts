@@ -62,4 +62,17 @@ export class Sale extends TenantBaseEntity {
 
   @Column({ type: 'timestamptz' })
   date: Date;
+
+  // Nombre libre para identificar una cuenta abierta (ej. "Mesa 3", "Fiado Juan").
+  @Column({ type: 'varchar', nullable: true })
+  label: string | null;
+
+  @Column({ name: 'voidReason', type: 'varchar', nullable: true })
+  voidReason: string | null;
+
+  @Column({ name: 'voidedAt', type: 'timestamptz', nullable: true })
+  voidedAt: Date | null;
+
+  @Column({ name: 'voidedBy', type: 'uuid', nullable: true })
+  voidedBy: string | null;
 }

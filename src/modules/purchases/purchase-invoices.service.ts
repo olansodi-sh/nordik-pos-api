@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
 import { TenantScopedService } from '../../common/tenant/tenant-scoped.service';
 import { PurchaseInvoice } from './entities/purchase-invoice.entity';
 import { PurchaseInvoiceLine } from './entities/purchase-invoice-line.entity';
 import { Stock } from '../inventory/stock/entities/stock.entity';
+import { StockMovementType } from '../inventory/stock/entities/stock-movement.entity';
+import { StockMovementsService } from '../inventory/stock/stock-movements.service';
 import { SuppliersService } from '../suppliers/suppliers.service';
 import { WarehousesService } from '../inventory/warehouses/warehouses.service';
 import { ProductsService } from '../products/products.service';
@@ -25,6 +27,7 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     private readonly warehousesService: WarehousesService,
     private readonly productsService: ProductsService,
     private readonly productVariantsService: ProductVariantsService,
+    private readonly stockMovementsService: StockMovementsService,
     tenantContext: TenantContext,
   ) {
     super(repository, tenantContext);
@@ -85,7 +88,13 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
         );
 
         if (tracksInventory[i]) {
-          await this.incrementStock(stockRepo, dto.warehouseId, line);
+          await this.incrementStock(
+            stockRepo,
+            dto.warehouseId,
+            line,
+            invoice.id,
+            manager,
+          );
         }
       }
 
@@ -117,17 +126,21 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     stockRepo: Repository<Stock>,
     warehouseId: string,
     line: PurchaseLineInputDto,
+    invoiceId: string,
+    manager: EntityManager,
   ): Promise<void> {
     const where = line.variantId
       ? { variantId: line.variantId, warehouseId }
       : { productId: line.productId, warehouseId };
 
-    const stock = await stockRepo.findOne({ where });
+    let stock = await stockRepo.findOne({ where });
+    const before = stock ? Number(stock.quantity) : 0;
+
     if (stock) {
-      stock.quantity = Number(stock.quantity) + line.quantity;
-      await stockRepo.save(stock);
+      stock.quantity = before + line.quantity;
+      stock = await stockRepo.save(stock);
     } else {
-      await stockRepo.save(
+      stock = await stockRepo.save(
         stockRepo.create({
           variantId: line.variantId ?? null,
           productId: line.productId ?? null,
@@ -136,5 +149,21 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
         }),
       );
     }
+
+    await this.stockMovementsService.record(
+      {
+        businessId: this.tenantContext.businessId,
+        variantId: line.variantId,
+        productId: line.productId,
+        warehouseId,
+        quantityDelta: line.quantity,
+        quantityAfter: Number(stock.quantity),
+        type: StockMovementType.PURCHASE,
+        refType: 'purchase_invoice',
+        refId: invoiceId,
+        userId: this.tenantContext.currentUser?.userId,
+      },
+      manager,
+    );
   }
 }

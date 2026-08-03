@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
+  IsString,
   IsUUID,
   Min,
   ValidateNested,
@@ -62,6 +63,18 @@ export class CreateSaleDto {
   @IsDateString()
   date?: string;
 
+  // Nombre libre para dejar la venta como "cuenta abierta" (ej. "Mesa 3").
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSaleLineDto)
+  lines: CreateSaleLineDto[];
+}
+
+export class AddSaleLinesDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateSaleLineDto)
