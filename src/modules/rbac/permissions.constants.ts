@@ -27,6 +27,7 @@ export const BASE_PERMISSIONS = [
   'reports.read',
   'tasks.manage',
   'expenses.manage',
+  'business.manage',
 ] as const;
 
 export type BasePermissionCode = (typeof BASE_PERMISSIONS)[number];

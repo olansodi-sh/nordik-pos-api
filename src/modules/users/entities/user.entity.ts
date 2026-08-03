@@ -20,6 +20,9 @@ export class User extends TenantBaseEntity {
   @Column({ default: true })
   active: boolean;
 
+  @Column({ default: false })
+  isSuperAdmin: boolean;
+
   @Column({ name: 'roleId', type: 'uuid', nullable: true })
   roleId: string | null;
 

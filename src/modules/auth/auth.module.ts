@@ -5,17 +5,11 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { BusinessesModule } from '../businesses/businesses.module';
-import { RbacModule } from '../rbac/rbac.module';
 import { UsersModule } from '../users/users.module';
-import { PricingModule } from '../pricing/pricing.module';
 
 @Module({
   imports: [
-    BusinessesModule,
     UsersModule,
-    RbacModule,
-    PricingModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
