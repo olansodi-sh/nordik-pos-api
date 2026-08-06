@@ -36,7 +36,7 @@ export class Stock extends BaseEntity {
   @Column({ name: 'warehouseId', type: 'uuid' })
   warehouseId: string;
 
-  @ManyToOne(() => Warehouse)
+  @ManyToOne(() => Warehouse, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse;
 

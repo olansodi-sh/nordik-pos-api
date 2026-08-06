@@ -28,14 +28,14 @@ export class KitComponent {
   @Column({ name: 'componentVariantId', type: 'uuid', nullable: true })
   componentVariantId: string | null;
 
-  @ManyToOne(() => ProductVariant, { nullable: true })
+  @ManyToOne(() => ProductVariant, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'componentVariantId' })
   componentVariant: ProductVariant | null;
 
   @Column({ name: 'componentProductId', type: 'uuid', nullable: true })
   componentProductId: string | null;
 
-  @ManyToOne(() => Product, { nullable: true })
+  @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'componentProductId' })
   componentProduct: Product | null;
 

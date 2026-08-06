@@ -13,14 +13,14 @@ export class CashSession extends TenantBaseEntity {
   @Column({ name: 'userId', type: 'uuid' })
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column({ name: 'warehouseId', type: 'uuid', nullable: true })
   warehouseId: string | null;
 
-  @ManyToOne(() => Warehouse, { nullable: true })
+  @ManyToOne(() => Warehouse, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse | null;
 

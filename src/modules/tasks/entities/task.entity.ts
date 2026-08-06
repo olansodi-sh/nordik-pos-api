@@ -22,7 +22,7 @@ export class TaskItem extends TenantBaseEntity {
   @Column({ name: 'assigneeId', type: 'uuid', nullable: true })
   assigneeId: string | null;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'assigneeId' })
   assignee: User | null;
 

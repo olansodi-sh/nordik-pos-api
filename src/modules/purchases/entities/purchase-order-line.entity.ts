@@ -21,14 +21,14 @@ export class PurchaseOrderLine extends BaseEntity {
   @Column({ name: 'variantId', type: 'uuid', nullable: true })
   variantId: string | null;
 
-  @ManyToOne(() => ProductVariant, { nullable: true })
+  @ManyToOne(() => ProductVariant, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'variantId' })
   variant: ProductVariant | null;
 
   @Column({ name: 'productId', type: 'uuid', nullable: true })
   productId: string | null;
 
-  @ManyToOne(() => Product, { nullable: true })
+  @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'productId' })
   product: Product | null;
 

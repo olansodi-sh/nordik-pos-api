@@ -26,7 +26,7 @@ export class User extends TenantBaseEntity {
   @Column({ name: 'roleId', type: 'uuid', nullable: true })
   roleId: string | null;
 
-  @ManyToOne(() => Role, { nullable: true })
+  @ManyToOne(() => Role, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'roleId' })
   role: Role | null;
 }

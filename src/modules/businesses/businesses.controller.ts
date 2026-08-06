@@ -1,7 +1,18 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { TenantContext } from '../../common/tenant/tenant-context';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
+import type { AuthenticatedUser } from '../auth/types/jwt-payload.type';
 import { BusinessesService } from './businesses.service';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { CreateBusinessDto } from './dto/create-business.dto';
@@ -22,7 +33,13 @@ export class BusinessesController {
   @UseGuards(SuperAdminGuard)
   @Post()
   create(@Body() dto: CreateBusinessDto) {
-    return this.businessesService.createFull(dto.name, dto.taxId);
+    return this.businessesService.createFull(dto.name, dto.taxId, dto.admins);
+  }
+
+  @UseGuards(SuperAdminGuard)
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.businessesService.remove(id);
   }
 
   @RequirePermissions('business.manage')
@@ -33,8 +50,13 @@ export class BusinessesController {
 
   @RequirePermissions('business.manage')
   @Patch('me')
-  updateMe(@Body() dto: UpdateBusinessDto) {
-    return this.businessesService.update(this.tenantContext.businessId, dto);
+  updateMe(
+    @Body() dto: UpdateBusinessDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const { name, taxId, ...rest } = dto;
+    const allowedDto = currentUser.isSuperAdmin ? dto : rest;
+    return this.businessesService.update(this.tenantContext.businessId, allowedDto);
   }
 
   @UseGuards(SuperAdminGuard)

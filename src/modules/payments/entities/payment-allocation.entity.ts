@@ -17,7 +17,7 @@ export class PaymentAllocation extends BaseEntity {
   @Column({ name: 'saleId', type: 'uuid' })
   saleId: string;
 
-  @ManyToOne(() => Sale)
+  @ManyToOne(() => Sale, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'saleId' })
   sale: Sale;
 
