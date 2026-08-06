@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Warehouse } from '../../inventory/warehouses/entities/warehouse.entity';
+import { CashRegister } from './cash-register.entity';
 
 export enum CashSessionStatus {
   OPEN = 'open',
@@ -23,6 +24,13 @@ export class CashSession extends TenantBaseEntity {
   @ManyToOne(() => Warehouse, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'warehouseId' })
   warehouse: Warehouse | null;
+
+  @Column({ name: 'cashRegisterId', type: 'uuid', nullable: true })
+  cashRegisterId: string | null;
+
+  @ManyToOne(() => CashRegister, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'cashRegisterId' })
+  cashRegister: CashRegister | null;
 
   @Column({
     name: 'openingAmount',

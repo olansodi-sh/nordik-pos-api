@@ -5,6 +5,10 @@ export class OpenCashSessionDto {
   @IsUUID()
   warehouseId?: string;
 
+  @IsOptional()
+  @IsUUID()
+  cashRegisterId?: string;
+
   @IsNumber()
   @Min(0)
   openingAmount: number;

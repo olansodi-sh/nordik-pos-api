@@ -10,6 +10,7 @@ import {
 } from './entities/cash-movement.entity';
 import { OpenCashSessionDto } from './dto/open-cash-session.dto';
 import { CloseCashSessionDto } from './dto/close-cash-session.dto';
+import { CashRegistersService } from './cash-registers.service';
 
 @Injectable()
 export class CashSessionsService extends TenantScopedService<CashSession> {
@@ -17,6 +18,7 @@ export class CashSessionsService extends TenantScopedService<CashSession> {
     @InjectRepository(CashSession) repository: Repository<CashSession>,
     @InjectRepository(CashMovement)
     private readonly movementsRepository: Repository<CashMovement>,
+    private readonly cashRegistersService: CashRegistersService,
     tenantContext: TenantContext,
   ) {
     super(repository, tenantContext);
@@ -39,9 +41,30 @@ export class CashSessionsService extends TenantScopedService<CashSession> {
       throw new BadRequestException('Ya tienes una caja abierta');
     }
 
+    let warehouseId = dto.warehouseId ?? null;
+
+    if (dto.cashRegisterId) {
+      const register = await this.cashRegistersService.findOneOrFail(
+        dto.cashRegisterId,
+      );
+      warehouseId = register.warehouseId;
+
+      const existingOpenRegister = await this.repository.findOne({
+        where: {
+          businessId: this.tenantContext.businessId,
+          cashRegisterId: dto.cashRegisterId,
+          status: CashSessionStatus.OPEN,
+        },
+      });
+      if (existingOpenRegister) {
+        throw new BadRequestException('Esta caja ya está abierta');
+      }
+    }
+
     return this.create({
       userId,
-      warehouseId: dto.warehouseId ?? null,
+      warehouseId,
+      cashRegisterId: dto.cashRegisterId ?? null,
       openingAmount: dto.openingAmount,
       status: CashSessionStatus.OPEN,
       openedAt: new Date(),
