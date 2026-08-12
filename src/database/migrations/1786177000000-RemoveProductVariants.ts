@@ -67,6 +67,30 @@ export class RemoveProductVariants1786177000000 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX IF EXISTS "public"."uq_price_list_variant"`);
     await queryRunner.query(`ALTER TABLE "price_list_items" DROP COLUMN IF EXISTS "variantId"`);
 
+    // Deduplicate before enforcing new uniqueness — with variantId collapsed into productId,
+    // two previously-distinct rows (e.g. a bare product row and a former variant row) can now
+    // collide on the same (productId, warehouseId) / (priceListId, productId) pair. Sum stock
+    // quantities into the surviving row so on-hand counts aren't silently lost; for price list
+    // items (not summable) the lowest-id row wins, which is a best-effort tie-break.
+    await queryRunner.query(`
+      UPDATE "stock" keep
+      SET "quantity" = keep."quantity" + COALESCE((
+        SELECT SUM(dup."quantity")
+        FROM "stock" dup
+        WHERE dup.id > keep.id
+          AND dup."productId" = keep."productId"
+          AND dup."warehouseId" = keep."warehouseId"
+      ), 0)
+    `);
+    await queryRunner.query(`
+      DELETE FROM "stock" a USING "stock" b
+      WHERE a.id > b.id AND a."productId" = b."productId" AND a."warehouseId" = b."warehouseId"
+    `);
+    await queryRunner.query(`
+      DELETE FROM "price_list_items" a USING "price_list_items" b
+      WHERE a.id > b.id AND a."productId" = b."productId" AND a."priceListId" = b."priceListId"
+    `);
+
     await queryRunner.query(`ALTER TABLE "product_barcodes" DROP CONSTRAINT IF EXISTS "FK_80bff17375afe2eedd36257c083"`);
     await queryRunner.query(`ALTER TABLE "product_barcodes" DROP COLUMN IF EXISTS "variantId"`);
 
@@ -109,9 +133,21 @@ export class RemoveProductVariants1786177000000 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "product_variants"`);
 
     await queryRunner.query(`ALTER TABLE "products" DROP COLUMN IF EXISTS "hasVariants"`);
+
+    // Re-establish uniqueness now that productId is the sole owner column — these back the
+    // Stock/PriceListItem entity @Index(unique) decorators.
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "uq_stock_product_warehouse" ON "stock" ("productId", "warehouseId")`,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "uq_price_list_product" ON "price_list_items" ("priceListId", "productId")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP INDEX IF EXISTS "public"."uq_price_list_product"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "public"."uq_stock_product_warehouse"`);
+
     await queryRunner.query(`ALTER TABLE "products" ADD COLUMN "hasVariants" boolean NOT NULL DEFAULT false`);
     await queryRunner.query(`CREATE TABLE "product_variants" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "productId" uuid NOT NULL, "cost" numeric(14,2) NOT NULL DEFAULT '0', "listPrice" numeric(14,2), "discountPercent" numeric(5,2) NOT NULL DEFAULT '0', "active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_product_variants" PRIMARY KEY ("id"))`);
     await queryRunner.query(`CREATE INDEX "IDX_f515690c571a03400a9876600b" ON "product_variants" ("productId")`);
