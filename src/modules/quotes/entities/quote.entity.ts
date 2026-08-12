@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum QuoteStatus {
   DRAFT = 'draft',
@@ -10,7 +10,7 @@ export enum QuoteStatus {
 }
 
 @Entity('quotes')
-export class Quote extends TenantBaseEntity {
+export class Quote extends BaseEntity {
   @Column()
   number: string;
 

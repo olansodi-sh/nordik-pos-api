@@ -68,7 +68,6 @@ export class LoyaltyPointsService {
 
     const transaction = await this.transactionsRepository.save(
       this.transactionsRepository.create({
-        businessId: this.tenantContext.businessId,
         customerId,
         saleId: saleId ?? null,
         points,

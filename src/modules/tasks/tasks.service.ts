@@ -24,7 +24,7 @@ export class TasksService extends TenantScopedService<TaskItem> {
 
   findByColumn(columnId: string) {
     return this.repository.find({
-      where: { columnId, businessId: this.tenantContext.businessId },
+      where: { columnId },
       order: { order: 'ASC' },
     });
   }

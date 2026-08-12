@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum LoyaltyTransactionType {
   EARNED = 'earned',
@@ -9,7 +9,7 @@ export enum LoyaltyTransactionType {
 }
 
 @Entity('loyalty_point_transactions')
-export class LoyaltyPointTransaction extends TenantBaseEntity {
+export class LoyaltyPointTransaction extends BaseEntity {
   @Column({ name: 'customerId', type: 'uuid' })
   customerId: string;
 

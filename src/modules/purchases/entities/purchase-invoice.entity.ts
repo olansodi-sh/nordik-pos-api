@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum PurchaseInvoiceDocumentType {
   INVOICE = 'invoice',
@@ -7,7 +7,7 @@ export enum PurchaseInvoiceDocumentType {
 }
 
 @Entity('purchase_invoices')
-export class PurchaseInvoice extends TenantBaseEntity {
+export class PurchaseInvoice extends BaseEntity {
   @Column()
   number: string;
 

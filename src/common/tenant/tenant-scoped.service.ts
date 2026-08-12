@@ -1,42 +1,27 @@
 import { NotFoundException } from '@nestjs/common';
-import {
-  DeepPartial,
-  FindOptionsWhere,
-  ObjectLiteral,
-  Repository,
-} from 'typeorm';
+import { DeepPartial, FindOptionsWhere, ObjectLiteral, Repository } from 'typeorm';
 import { TenantContext } from './tenant-context';
 
 /**
- * Base para servicios de entidades con businessId (TenantBaseEntity).
- * Todas las lecturas/escrituras quedan automáticamente acotadas al negocio
- * del usuario autenticado — un servicio concreto solo necesita extender
- * esta clase para heredar el aislamiento por tenant, sin repetir el filtro
- * a mano en cada método.
+ * Base para servicios de entidades del inquilino. El aislamiento por negocio
+ * ya no es un filtro por columna (businessId): el repositorio inyectado está
+ * conectado a la base de datos física de ese inquilino (ver TenantOrmModule),
+ * así que un servicio concreto solo necesita extender esta clase para
+ * heredar CRUD genérico, sin repetirlo a mano en cada módulo.
  */
-export abstract class TenantScopedService<
-  T extends ObjectLiteral & { businessId: string },
-> {
+export abstract class TenantScopedService<T extends ObjectLiteral & { id: string }> {
   protected constructor(
     protected readonly repository: Repository<T>,
     protected readonly tenantContext: TenantContext,
   ) {}
 
   findAll(where: FindOptionsWhere<T> = {}): Promise<T[]> {
-    return this.repository.find({
-      where: {
-        ...where,
-        businessId: this.tenantContext.businessId,
-      } as unknown as FindOptionsWhere<T>,
-    });
+    return this.repository.find({ where });
   }
 
   async findOneOrFail(id: string): Promise<T> {
     const entity = await this.repository.findOne({
-      where: {
-        id,
-        businessId: this.tenantContext.businessId,
-      } as unknown as FindOptionsWhere<T>,
+      where: { id } as unknown as FindOptionsWhere<T>,
     });
     if (!entity) {
       throw new NotFoundException(
@@ -47,10 +32,7 @@ export abstract class TenantScopedService<
   }
 
   create(data: DeepPartial<T>): Promise<T> {
-    const entity = this.repository.create({
-      ...data,
-      businessId: this.tenantContext.businessId,
-    } as DeepPartial<T>);
+    const entity = this.repository.create(data);
     return this.repository.save(entity);
   }
 

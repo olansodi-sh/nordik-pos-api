@@ -1,8 +1,8 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 @Entity('price_lists')
-export class PriceList extends TenantBaseEntity {
+export class PriceList extends BaseEntity {
   @Column()
   name: string;
 

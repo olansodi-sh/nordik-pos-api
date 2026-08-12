@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
-import { VariantAttributeValue } from './entities/variant-attribute-value.entity';
-import { ProductAttributeValue } from './entities/product-attribute-value.entity';
 import { ProductBarcode } from './entities/product-barcode.entity';
 import { ProductImage } from './entities/product-image.entity';
 import { KitComponent } from './entities/kit-component.entity';
@@ -16,20 +14,18 @@ import { ProductImagesController } from './product-images.controller';
 import { KitComponentsService } from './kit-components.service';
 import { KitComponentsController } from './kit-components.controller';
 import { BarcodesService } from './barcodes.service';
-import { AttributesModule } from '../catalog/attributes/attributes.module';
+import { CustomFieldsModule } from '../custom-fields/custom-fields.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
+    TenantOrmModule.forFeature([
       Product,
       ProductVariant,
-      VariantAttributeValue,
-      ProductAttributeValue,
       ProductBarcode,
       ProductImage,
       KitComponent,
     ]),
-    AttributesModule,
+    CustomFieldsModule,
   ],
   controllers: [
     ProductsController,
@@ -44,6 +40,6 @@ import { AttributesModule } from '../catalog/attributes/attributes.module';
     KitComponentsService,
     BarcodesService,
   ],
-  exports: [ProductsService, ProductVariantsService, TypeOrmModule],
+  exports: [ProductsService, ProductVariantsService, TenantOrmModule],
 })
 export class ProductsModule {}

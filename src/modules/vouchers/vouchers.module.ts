@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { Voucher } from './entities/voucher.entity';
 import { VouchersService } from './vouchers.service';
 import { VouchersController } from './vouchers.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Voucher])],
+  imports: [TenantOrmModule.forFeature([Voucher])],
   controllers: [VouchersController],
   providers: [VouchersService],
-  exports: [VouchersService, TypeOrmModule],
+  exports: [VouchersService, TenantOrmModule],
 })
 export class VouchersModule {}

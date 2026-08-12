@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
+import { TENANT_DATA_SOURCE } from '../../database/tenant/tenant-orm.module';
 import { TenantContext } from '../../common/tenant/tenant-context';
 import { TenantScopedService } from '../../common/tenant/tenant-scoped.service';
 import { PurchaseInvoice } from './entities/purchase-invoice.entity';
@@ -22,7 +23,7 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     @InjectRepository(PurchaseInvoice) repository: Repository<PurchaseInvoice>,
     @InjectRepository(PurchaseInvoiceLine)
     private readonly linesRepository: Repository<PurchaseInvoiceLine>,
-    private readonly dataSource: DataSource,
+    @Inject(TENANT_DATA_SOURCE) private readonly dataSource: DataSource,
     private readonly suppliersService: SuppliersService,
     private readonly warehousesService: WarehousesService,
     private readonly productsService: ProductsService,
@@ -61,7 +62,6 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
 
       const invoice = await invoiceRepo.save(
         invoiceRepo.create({
-          businessId: this.tenantContext.businessId,
           number: generateDocumentNumber('FC'),
           documentType: dto.documentType,
           supplierId: dto.supplierId,

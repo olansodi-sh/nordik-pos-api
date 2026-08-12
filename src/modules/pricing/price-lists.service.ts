@@ -17,21 +17,8 @@ export class PriceListsService extends TenantScopedService<PriceList> {
     super(repository, tenantContext);
   }
 
-  /** Se llama al registrar un negocio nuevo: nace con su lista "Consumidor Final". */
-  async createDefaultForBusiness(businessId: string): Promise<PriceList> {
-    return this.repository.save(
-      this.repository.create({
-        businessId,
-        name: 'Consumidor Final',
-        isDefault: true,
-      }),
-    );
-  }
-
   async findDefault(): Promise<PriceList | null> {
-    return this.repository.findOne({
-      where: { businessId: this.tenantContext.businessId, isDefault: true },
-    });
+    return this.repository.findOne({ where: { isDefault: true } });
   }
 
   /** Clona los precios de una lista existente como punto de partida para una nueva. */

@@ -1,9 +1,9 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 import { DocType } from '../../customers/entities/customer.entity';
 
 @Entity('suppliers')
-export class Supplier extends TenantBaseEntity {
+export class Supplier extends BaseEntity {
   @Column()
   name: string;
 

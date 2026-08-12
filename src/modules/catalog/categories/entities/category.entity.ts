@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { TenantBaseEntity } from '../../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../../common/entities/base.entity';
 
 @Entity('categories')
-export class Category extends TenantBaseEntity {
+export class Category extends BaseEntity {
   @Column()
   name: string;
 

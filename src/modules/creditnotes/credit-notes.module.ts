@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { CreditNote } from './entities/credit-note.entity';
 import { CreditNotesService } from './credit-notes.service';
 import { CreditNotesController } from './credit-notes.controller';
 import { StockModule } from '../inventory/stock/stock.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CreditNote]), StockModule],
+  imports: [TenantOrmModule.forFeature([CreditNote]), StockModule],
   controllers: [CreditNotesController],
   providers: [CreditNotesService],
-  exports: [CreditNotesService, TypeOrmModule],
+  exports: [CreditNotesService, TenantOrmModule],
 })
 export class CreditNotesModule {}

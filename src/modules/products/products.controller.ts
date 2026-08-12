@@ -39,12 +39,6 @@ export class ProductsController {
   }
 
   @RequirePermissions('catalog.read')
-  @Get(':id/attributes')
-  findAttributes(@Param('id') id: string) {
-    return this.productsService.findAttributeValues(id);
-  }
-
-  @RequirePermissions('catalog.read')
   @Get(':id/barcodes')
   findBarcodes(@Param('id') id: string) {
     return this.barcodesService.findByProductOrVariant({ productId: id });

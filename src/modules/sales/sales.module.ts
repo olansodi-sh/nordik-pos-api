@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { Sale } from './entities/sale.entity';
 import { SaleLine } from './entities/sale-line.entity';
 import { SalesService } from './sales.service';
@@ -11,10 +11,11 @@ import { PricingModule } from '../pricing/pricing.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { LoyaltyModule } from '../loyalty/loyalty.module';
 import { StockModule } from '../inventory/stock/stock.module';
+import { CustomFieldsModule } from '../custom-fields/custom-fields.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Sale, SaleLine]),
+    TenantOrmModule.forFeature([Sale, SaleLine]),
     WarehousesModule,
     ProductsModule,
     CustomersModule,
@@ -22,9 +23,10 @@ import { StockModule } from '../inventory/stock/stock.module';
     PromotionsModule,
     LoyaltyModule,
     StockModule,
+    CustomFieldsModule,
   ],
   controllers: [SalesController],
   providers: [SalesService],
-  exports: [SalesService, TypeOrmModule],
+  exports: [SalesService, TenantOrmModule],
 })
 export class SalesModule {}

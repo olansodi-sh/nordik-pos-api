@@ -1,8 +1,8 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 @Entity('debit_notes')
-export class DebitNote extends TenantBaseEntity {
+export class DebitNote extends BaseEntity {
   @Column()
   number: string;
 

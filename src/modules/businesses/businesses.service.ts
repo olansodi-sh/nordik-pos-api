@@ -2,19 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Business } from './entities/business.entity';
-import { RbacService } from '../rbac/rbac.service';
-import { PriceListsService } from '../pricing/price-lists.service';
 import { UsersService } from '../users/users.service';
 import { CreateBusinessAdminDto } from './dto/create-business.dto';
+import { TenantProvisioningService } from '../../database/tenant/tenant-provisioning.service';
 
 @Injectable()
 export class BusinessesService {
   constructor(
     @InjectRepository(Business)
     private readonly businessesRepository: Repository<Business>,
-    private readonly rbacService: RbacService,
-    private readonly priceListsService: PriceListsService,
     private readonly usersService: UsersService,
+    private readonly tenantProvisioningService: TenantProvisioningService,
   ) {}
 
   async create(name: string, taxId?: string): Promise<Business> {
@@ -26,9 +24,11 @@ export class BusinessesService {
   }
 
   /**
-   * Crea un negocio nuevo ya listo para operar: rol Admin (con todos los
-   * permisos actuales), lista de precios por defecto, y sus usuarios
-   * administradores (1 o 2), asignados directamente al rol Admin sembrado.
+   * Crea un negocio nuevo ya listo para operar: aprovisiona su base de datos
+   * física (rol Admin con todos los permisos actuales + lista de precios por
+   * defecto sembrados ahí mismo, ver TenantProvisioningService), y sus
+   * usuarios administradores (1 o 2), asignados directamente al rol Admin
+   * sembrado.
    */
   async createFull(
     name: string,
@@ -36,15 +36,14 @@ export class BusinessesService {
     admins: CreateBusinessAdminDto[],
   ): Promise<Business> {
     const business = await this.create(name, taxId);
-    const adminRole = await this.rbacService.seedDefaultRolesForBusiness(business.id);
-    await this.priceListsService.createDefaultForBusiness(business.id);
+    const { adminRoleId } = await this.tenantProvisioningService.provisionForBusiness(business.id);
 
     for (const admin of admins) {
       await this.usersService.createForBusiness(business.id, {
         name: admin.name,
         email: admin.email,
         password: admin.password,
-        roleId: adminRole.id,
+        roleId: adminRoleId,
       });
     }
 
@@ -65,6 +64,9 @@ export class BusinessesService {
 
   async remove(id: string): Promise<void> {
     await this.findById(id);
+    // Primero la BD física del inquilino (y su registro de conexión), para
+    // no dejar una base huérfana en el servidor si esto se corta a la mitad.
+    await this.tenantProvisioningService.deprovisionForBusiness(id);
     await this.businessesRepository.delete(id);
   }
 

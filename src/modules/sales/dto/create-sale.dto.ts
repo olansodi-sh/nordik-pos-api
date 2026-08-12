@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsEnum,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
@@ -67,6 +68,12 @@ export class CreateSaleDto {
   @IsOptional()
   @IsString()
   label?: string;
+
+  // Valores de los campos personalizados definidos para Venta (ver
+  // CustomFieldDefinition) — se validan contra esas definiciones al crear.
+  @IsOptional()
+  @IsObject()
+  customFields?: Record<string, unknown>;
 
   @IsArray()
   @ValidateNested({ each: true })

@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum RecurringInvoiceFrequency {
   WEEKLY = 'weekly',
@@ -14,7 +14,7 @@ export interface RecurringInvoiceLine {
 }
 
 @Entity('recurring_invoices')
-export class RecurringInvoice extends TenantBaseEntity {
+export class RecurringInvoice extends BaseEntity {
   @Column()
   name: string;
 

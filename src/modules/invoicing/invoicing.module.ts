@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { BusinessInvoicingSettings } from './entities/business-invoicing-settings.entity';
 import { SaleElectronicInvoice } from './entities/sale-electronic-invoice.entity';
 import { BusinessInvoicingSettingsService } from './business-invoicing-settings.service';
@@ -9,7 +9,7 @@ import { SalesModule } from '../sales/sales.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
+    TenantOrmModule.forFeature([
       BusinessInvoicingSettings,
       SaleElectronicInvoice,
     ]),
@@ -20,7 +20,7 @@ import { SalesModule } from '../sales/sales.module';
   exports: [
     BusinessInvoicingSettingsService,
     SaleElectronicInvoicesService,
-    TypeOrmModule,
+    TenantOrmModule,
   ],
 })
 export class InvoicingModule {}

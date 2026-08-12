@@ -1,10 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 import { TaskColumn } from './task-column.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('tasks')
-export class TaskItem extends TenantBaseEntity {
+export class TaskItem extends BaseEntity {
   @Column()
   title: string;
 

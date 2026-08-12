@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { CashSession } from './entities/cash-session.entity';
 import { CashMovement } from './entities/cash-movement.entity';
 import { CashRegister } from './entities/cash-register.entity';
@@ -12,7 +12,7 @@ import { WarehousesModule } from '../inventory/warehouses/warehouses.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CashSession, CashMovement, CashRegister]),
+    TenantOrmModule.forFeature([CashSession, CashMovement, CashRegister]),
     WarehousesModule,
   ],
   controllers: [CashSessionsController, CashRegistersController],
@@ -21,7 +21,7 @@ import { WarehousesModule } from '../inventory/warehouses/warehouses.module';
     CashSessionsService,
     CashMovementsService,
     CashRegistersService,
-    TypeOrmModule,
+    TenantOrmModule,
   ],
 })
 export class CashModule {}

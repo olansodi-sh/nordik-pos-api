@@ -32,7 +32,6 @@ export class CashSessionsService extends TenantScopedService<CashSession> {
 
     const existingOpen = await this.repository.findOne({
       where: {
-        businessId: this.tenantContext.businessId,
         userId,
         status: CashSessionStatus.OPEN,
       },
@@ -51,7 +50,6 @@ export class CashSessionsService extends TenantScopedService<CashSession> {
 
       const existingOpenRegister = await this.repository.findOne({
         where: {
-          businessId: this.tenantContext.businessId,
           cashRegisterId: dto.cashRegisterId,
           status: CashSessionStatus.OPEN,
         },
@@ -103,7 +101,6 @@ export class CashSessionsService extends TenantScopedService<CashSession> {
     const userId = this.tenantContext.currentUser?.userId;
     return this.repository.findOne({
       where: {
-        businessId: this.tenantContext.businessId,
         userId,
         status: CashSessionStatus.OPEN,
       },

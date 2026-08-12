@@ -36,15 +36,6 @@ export class ProductVariantsController {
   }
 
   @RequirePermissions('catalog.read')
-  @Get(':variantId/attributes')
-  findAttributes(
-    @Param('productId') productId: string,
-    @Param('variantId') variantId: string,
-  ) {
-    return this.variantsService.findAttributeValues(productId, variantId);
-  }
-
-  @RequirePermissions('catalog.read')
   @Get(':variantId/barcodes')
   findBarcodes(@Param('variantId') variantId: string) {
     return this.barcodesService.findByProductOrVariant({ variantId });

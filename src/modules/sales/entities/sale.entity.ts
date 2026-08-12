@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum SalesChannel {
   POS = 'pos',
@@ -14,7 +14,7 @@ export enum SaleStatus {
 }
 
 @Entity('sales')
-export class Sale extends TenantBaseEntity {
+export class Sale extends BaseEntity {
   @Column()
   number: string;
 
@@ -75,4 +75,9 @@ export class Sale extends TenantBaseEntity {
 
   @Column({ name: 'voidedBy', type: 'uuid', nullable: true })
   voidedBy: string | null;
+
+  // Valores de los campos personalizados que el negocio haya definido para
+  // Venta (ver CustomFieldDefinition) — clave = CustomFieldDefinition.key.
+  @Column({ name: 'customFields', type: 'jsonb', default: {} })
+  customFields: Record<string, unknown>;
 }

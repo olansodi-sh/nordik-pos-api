@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { TENANT_DATA_SOURCE } from '../../database/tenant/tenant-orm.module';
 import { TenantContext } from '../../common/tenant/tenant-context';
 import { TenantScopedService } from '../../common/tenant/tenant-scoped.service';
 import { Payment, PaymentMethod } from './entities/payment.entity';
@@ -22,7 +23,7 @@ export class PaymentsService extends TenantScopedService<Payment> {
     @InjectRepository(Payment) repository: Repository<Payment>,
     @InjectRepository(PaymentAllocation)
     private readonly allocationsRepository: Repository<PaymentAllocation>,
-    private readonly dataSource: DataSource,
+    @Inject(TENANT_DATA_SOURCE) private readonly dataSource: DataSource,
     tenantContext: TenantContext,
   ) {
     super(repository, tenantContext);
@@ -62,7 +63,6 @@ export class PaymentsService extends TenantScopedService<Payment> {
 
       const payment = await paymentRepo.save(
         paymentRepo.create({
-          businessId: this.tenantContext.businessId,
           customerId: dto.customerId ?? null,
           method: dto.method,
           amount: dto.amount,
@@ -74,10 +74,7 @@ export class PaymentsService extends TenantScopedService<Payment> {
 
       for (const allocation of dto.allocations) {
         const sale = await saleRepo.findOne({
-          where: {
-            id: allocation.saleId,
-            businessId: this.tenantContext.businessId,
-          },
+          where: { id: allocation.saleId },
         });
         if (!sale) {
           throw new BadRequestException(

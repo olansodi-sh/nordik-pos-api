@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Warehouse } from '../../inventory/warehouses/entities/warehouse.entity';
 import { CashRegister } from './cash-register.entity';
@@ -10,7 +10,7 @@ export enum CashSessionStatus {
 }
 
 @Entity('cash_sessions')
-export class CashSession extends TenantBaseEntity {
+export class CashSession extends BaseEntity {
   @Column({ name: 'userId', type: 'uuid' })
   userId: string;
 

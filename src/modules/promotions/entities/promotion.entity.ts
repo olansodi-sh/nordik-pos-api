@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum PromotionType {
   PERCENTAGE = 'percentage',
@@ -20,7 +20,7 @@ export interface BuyXGetYConditions {
 }
 
 @Entity('promotions')
-export class Promotion extends TenantBaseEntity {
+export class Promotion extends BaseEntity {
   @Column()
   name: string;
 

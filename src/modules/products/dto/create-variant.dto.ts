@@ -1,13 +1,4 @@
-import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Min,
-  ValidateNested,
-} from 'class-validator';
-import { AttributeValueInputDto } from './attribute-value-input.dto';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateVariantDto {
   @IsOptional()
@@ -29,10 +20,4 @@ export class CreateVariantDto {
   @IsOptional()
   @IsString()
   barcode?: string;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValueInputDto)
-  attributes?: AttributeValueInputDto[];
 }

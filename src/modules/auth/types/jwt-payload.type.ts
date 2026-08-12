@@ -1,11 +1,13 @@
 export interface JwtPayload {
   sub: string; // userId
-  businessId: string;
+  businessId?: string;
+  membershipId?: string;
 }
 
 export interface AuthenticatedUser {
   userId: string;
-  businessId: string;
+  businessId?: string;
+  membershipId?: string;
   email: string;
   name: string;
   permissions: string[];

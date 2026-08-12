@@ -36,10 +36,7 @@ export class ReportsService {
   async salesSummary(from?: string, to?: string) {
     const qb = this.salesRepository
       .createQueryBuilder('sale')
-      .where('sale."businessId" = :businessId', {
-        businessId: this.tenantContext.businessId,
-      })
-      .andWhere("sale.status != 'cancelled'");
+      .where("sale.status != 'cancelled'");
 
     if (from) qb.andWhere('sale.date >= :from', { from });
     if (to) qb.andWhere('sale.date <= :to', { to });
@@ -63,10 +60,7 @@ export class ReportsService {
   async topCustomers(from?: string, to?: string, limit = 10) {
     const qb = this.salesRepository
       .createQueryBuilder('sale')
-      .where('sale."businessId" = :businessId', {
-        businessId: this.tenantContext.businessId,
-      })
-      .andWhere('sale."customerId" IS NOT NULL')
+      .where('sale."customerId" IS NOT NULL')
       .andWhere("sale.status != 'cancelled'");
 
     if (from) qb.andWhere('sale.date >= :from', { from });
@@ -99,9 +93,6 @@ export class ReportsService {
       .createQueryBuilder('stock')
       .innerJoin('stock.variant', 'variant')
       .innerJoin('variant.product', 'product')
-      .where('product."businessId" = :businessId', {
-        businessId: this.tenantContext.businessId,
-      })
       .select('stock."warehouseId"', 'warehouseId')
       .addSelect('SUM(stock.quantity * variant.cost)', 'totalValue')
       .addSelect('SUM(stock.quantity)', 'totalUnits')

@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum PaymentMethod {
   CASH = 'cash',
@@ -11,7 +11,7 @@ export enum PaymentMethod {
 }
 
 @Entity('payments')
-export class Payment extends TenantBaseEntity {
+export class Payment extends BaseEntity {
   @Column({ name: 'customerId', type: 'uuid', nullable: true })
   customerId: string | null;
 

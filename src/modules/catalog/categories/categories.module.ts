@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../../database/tenant/tenant-orm.module';
 import { Category } from './entities/category.entity';
 import { CategoriesService } from './categories.service';
 import { CategoriesController } from './categories.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Category])],
+  imports: [TenantOrmModule.forFeature([Category])],
   controllers: [CategoriesController],
   providers: [CategoriesService],
-  exports: [CategoriesService, TypeOrmModule],
+  exports: [CategoriesService, TenantOrmModule],
 })
 export class CategoriesModule {}

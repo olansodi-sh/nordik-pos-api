@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { LoyaltySettings } from './entities/loyalty-settings.entity';
 import { LoyaltyPointTransaction } from './entities/loyalty-point-transaction.entity';
 import { LoyaltySettingsService } from './loyalty-settings.service';
@@ -9,11 +9,11 @@ import { CustomersModule } from '../customers/customers.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([LoyaltySettings, LoyaltyPointTransaction]),
+    TenantOrmModule.forFeature([LoyaltySettings, LoyaltyPointTransaction]),
     CustomersModule,
   ],
   controllers: [LoyaltyController],
   providers: [LoyaltySettingsService, LoyaltyPointsService],
-  exports: [LoyaltySettingsService, LoyaltyPointsService, TypeOrmModule],
+  exports: [LoyaltySettingsService, LoyaltyPointsService, TenantOrmModule],
 })
 export class LoyaltyModule {}

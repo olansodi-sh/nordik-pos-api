@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { TENANT_DATA_SOURCE } from '../../../database/tenant/tenant-orm.module';
 import { TenantContext } from '../../../common/tenant/tenant-context';
 import { Stock } from './entities/stock.entity';
 import { StockMovementType } from './entities/stock-movement.entity';
@@ -20,7 +21,7 @@ export class StockService {
     private readonly productsService: ProductsService,
     private readonly productVariantsService: ProductVariantsService,
     private readonly stockMovementsService: StockMovementsService,
-    private readonly dataSource: DataSource,
+    @Inject(TENANT_DATA_SOURCE) private readonly dataSource: DataSource,
     private readonly tenantContext: TenantContext,
   ) {}
 

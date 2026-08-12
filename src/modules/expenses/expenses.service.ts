@@ -50,11 +50,7 @@ export class ExpensesService extends TenantScopedService<Expense> {
     total: number;
     byCategory: { category: string; total: number }[];
   }> {
-    const qb = this.repository
-      .createQueryBuilder('expense')
-      .where('expense."businessId" = :businessId', {
-        businessId: this.tenantContext.businessId,
-      });
+    const qb = this.repository.createQueryBuilder('expense');
 
     if (from) qb.andWhere('expense.date >= :from', { from });
     if (to) qb.andWhere('expense.date <= :to', { to });

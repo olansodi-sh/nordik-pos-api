@@ -34,15 +34,11 @@ export class CustomersService extends TenantScopedService<Customer> {
     docNumber?: string,
   ): Promise<Customer | null> {
     if (email) {
-      const byEmail = await this.repository.findOne({
-        where: { businessId: this.tenantContext.businessId, email },
-      });
+      const byEmail = await this.repository.findOne({ where: { email } });
       if (byEmail) return byEmail;
     }
     if (docNumber) {
-      const byDoc = await this.repository.findOne({
-        where: { businessId: this.tenantContext.businessId, docNumber },
-      });
+      const byDoc = await this.repository.findOne({ where: { docNumber } });
       if (byDoc) return byDoc;
     }
     return null;

@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum VoucherStatus {
   ACTIVE = 'active',
@@ -8,7 +8,7 @@ export enum VoucherStatus {
 }
 
 @Entity('vouchers')
-export class Voucher extends TenantBaseEntity {
+export class Voucher extends BaseEntity {
   @Column({ unique: true })
   code: string;
 

@@ -75,10 +75,7 @@ export class BarcodesService {
       relations: { product: true, variant: { product: true } },
     });
 
-    const businessId =
-      barcode?.product?.businessId ?? barcode?.variant?.product?.businessId;
-
-    if (!barcode || businessId !== this.tenantContext.businessId) {
+    if (!barcode) {
       throw new NotFoundException(
         `No se encontró ningún producto con el código "${code}"`,
       );

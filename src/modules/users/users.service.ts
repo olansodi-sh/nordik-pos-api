@@ -9,10 +9,18 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { MembershipsService } from '../memberships/memberships.service';
+import { MembershipStatus } from '../memberships/entities/user-tenant-membership.entity';
+import { MenuService } from '../menu/menu.service';
 
 const SALT_ROUNDS = 10;
 
 export type SafeUser = Omit<User, 'passwordHash'>;
+
+export interface BusinessUser extends SafeUser {
+  roleId: string | null;
+  membershipStatus: MembershipStatus;
+}
 
 function stripPassword(user: User): SafeUser {
   const safe: Partial<User> = { ...user };
@@ -32,112 +40,129 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly membershipsService: MembershipsService,
+    private readonly menuService: MenuService,
   ) {}
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { email },
-      relations: { role: { permissions: true } },
-    });
+    return this.usersRepository.findOne({ where: { email } });
   }
 
   async findById(id: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      relations: { role: { permissions: true } },
-    });
+    const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User ${id} not found`);
     }
     return user;
   }
 
-  async create(data: {
-    businessId: string;
-    name: string;
-    email: string;
-    passwordHash: string;
-    roleId?: string | null;
-  }): Promise<User> {
-    const user = this.usersRepository.create({
-      ...data,
-      roleId: data.roleId ?? null,
-    });
-    return this.usersRepository.save(user);
-  }
-
-  async findAllForBusiness(businessId: string): Promise<SafeUser[]> {
-    const users = await this.usersRepository.find({
-      where: { businessId },
-      relations: { role: true },
-    });
-    return users.map(stripPassword);
+  /**
+   * Usuarios con una membresía (de cualquier estado) al negocio indicado.
+   */
+  async findAllForBusiness(businessId: string): Promise<BusinessUser[]> {
+    const memberships = await this.membershipsService.findAllForBusiness(businessId);
+    return memberships
+      .filter((m) => m.user)
+      .map((m) => ({
+        ...stripPassword(m.user),
+        roleId: m.roleId,
+        membershipStatus: m.status,
+      }));
   }
 
   async findOneForBusinessOrFail(
     businessId: string,
     id: string,
-  ): Promise<SafeUser> {
-    const user = await this.usersRepository.findOne({
-      where: { id, businessId },
-      relations: { role: true },
-    });
-    if (!user) {
+  ): Promise<BusinessUser> {
+    const membership = await this.membershipsService.findForUserAndBusiness(id, businessId);
+    if (!membership) {
       throw new NotFoundException(`Usuario ${id} no encontrado`);
     }
-    return stripPassword(user);
+    const user = await this.findById(id);
+    return {
+      ...stripPassword(user),
+      roleId: membership.roleId,
+      membershipStatus: membership.status,
+    };
   }
 
+  /**
+   * Crea el usuario y su membresía al negocio; si ya existe una cuenta con
+   * ese email (pertenece a otro negocio), no la duplica — le agrega una
+   * membresía nueva a este negocio con el rol indicado.
+   */
   async createForBusiness(
     businessId: string,
     dto: CreateUserDto,
-  ): Promise<SafeUser> {
-    const existing = await this.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('Ya existe un usuario con ese email');
+  ): Promise<BusinessUser> {
+    let user = await this.findByEmail(dto.email);
+    let isFirstMembership = true;
+
+    if (user) {
+      const existingMembership = await this.membershipsService.findForUserAndBusiness(
+        user.id,
+        businessId,
+      );
+      if (existingMembership && existingMembership.status === MembershipStatus.ACTIVE) {
+        throw new ConflictException('Ya existe un usuario con ese email en este negocio');
+      }
+      const currentMemberships = await this.membershipsService.findActiveForUser(user.id);
+      isFirstMembership = currentMemberships.length === 0;
+    } else {
+      const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
+      user = await this.usersRepository.save(
+        this.usersRepository.create({ name: dto.name, email: dto.email, passwordHash }),
+      );
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
-    const user = await this.create({
+    const membership = await this.membershipsService.createOrReactivate({
+      userId: user.id,
       businessId,
-      name: dto.name,
-      email: dto.email,
-      passwordHash,
       roleId: dto.roleId ?? null,
+      isDefault: isFirstMembership,
     });
-    return stripPassword(user);
+    await this.menuService.seedBaselineAccess(membership.id);
+
+    return {
+      ...stripPassword(user),
+      roleId: membership.roleId,
+      membershipStatus: membership.status,
+    };
   }
 
   async updateForBusiness(
     businessId: string,
     id: string,
     dto: UpdateUserDto,
-  ): Promise<SafeUser> {
-    const user = await this.usersRepository.findOne({
-      where: { id, businessId },
-    });
-    if (!user) {
-      throw new NotFoundException(`Usuario ${id} no encontrado`);
-    }
+  ): Promise<BusinessUser> {
+    const user = await this.findById(id);
 
     if (dto.name !== undefined) user.name = dto.name;
-    if (dto.roleId !== undefined) user.roleId = dto.roleId;
-    if (dto.active !== undefined) user.active = dto.active;
     if (dto.password) {
       user.passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     }
+    if (dto.name !== undefined || dto.password) {
+      await this.usersRepository.save(user);
+    }
 
-    const saved = await this.usersRepository.save(user);
-    return stripPassword(saved);
+    const membership = await this.membershipsService.updateForBusiness(businessId, id, {
+      roleId: dto.roleId,
+      status:
+        dto.active === undefined
+          ? undefined
+          : dto.active
+            ? MembershipStatus.ACTIVE
+            : MembershipStatus.SUSPENDED,
+    });
+
+    return {
+      ...stripPassword(user),
+      roleId: membership.roleId,
+      membershipStatus: membership.status,
+    };
   }
 
   async removeForBusiness(businessId: string, id: string): Promise<void> {
-    const user = await this.usersRepository.findOne({
-      where: { id, businessId },
-    });
-    if (!user) {
-      throw new NotFoundException(`Usuario ${id} no encontrado`);
-    }
-    await this.usersRepository.softRemove(user);
+    await this.membershipsService.removeForBusiness(businessId, id);
   }
 }

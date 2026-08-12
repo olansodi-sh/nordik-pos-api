@@ -1,14 +1,11 @@
-import { Type } from 'class-transformer';
 import {
-  IsArray,
   IsBoolean,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
   MinLength,
-  ValidateNested,
 } from 'class-validator';
-import { AttributeValueInputDto } from './attribute-value-input.dto';
 
 export class CreateProductDto {
   @IsString()
@@ -48,9 +45,9 @@ export class CreateProductDto {
   @IsString()
   barcode?: string;
 
+  // Valores de los campos personalizados definidos para Producto (ver
+  // CustomFieldDefinition) — se validan contra esas definiciones al crear.
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AttributeValueInputDto)
-  attributes?: AttributeValueInputDto[];
+  @IsObject()
+  customFields?: Record<string, unknown>;
 }

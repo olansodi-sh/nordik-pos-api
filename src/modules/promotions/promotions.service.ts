@@ -96,7 +96,6 @@ export class PromotionsService extends TenantScopedService<Promotion> {
 
     const allScope = await this.repository.find({
       where: {
-        businessId: this.tenantContext.businessId,
         active: true,
         scope: PromotionScope.ALL,
       },
@@ -109,10 +108,7 @@ export class PromotionsService extends TenantScopedService<Promotion> {
         'target',
         'target."promotionId" = promotion.id',
       )
-      .where('promotion."businessId" = :businessId', {
-        businessId: this.tenantContext.businessId,
-      })
-      .andWhere('promotion.active = true')
+      .where('promotion.active = true')
       .andWhere(
         `(target."targetType" = :variantType AND target."targetId" = :variantId)
          OR (target."targetType" = :productType AND target."targetId" = :productId)

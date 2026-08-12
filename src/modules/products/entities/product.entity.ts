@@ -1,11 +1,11 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 import { Category } from '../../catalog/categories/entities/category.entity';
 import { Brand } from '../../catalog/brands/entities/brand.entity';
 
 @Entity('products')
-@Unique('uq_product_business_sku', ['businessId', 'sku'])
-export class Product extends TenantBaseEntity {
+@Unique('uq_product_sku', ['sku'])
+export class Product extends BaseEntity {
   @Column()
   sku: string;
 
@@ -41,4 +41,7 @@ export class Product extends TenantBaseEntity {
 
   @Column({ default: true })
   active: boolean;
+
+  @Column({ type: 'jsonb', default: {} })
+  customFields: Record<string, unknown>;
 }

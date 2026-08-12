@@ -4,12 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
+import { TenantOrmModule } from './database/tenant/tenant-orm.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessesModule } from './modules/businesses/businesses.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { UsersModule } from './modules/users/users.module';
 import { CategoriesModule } from './modules/catalog/categories/categories.module';
-import { AttributesModule } from './modules/catalog/attributes/attributes.module';
 import { BrandsModule } from './modules/catalog/brands/brands.module';
 import { ProductsModule } from './modules/products/products.module';
 import { WarehousesModule } from './modules/inventory/warehouses/warehouses.module';
@@ -42,16 +42,18 @@ import { ExpensesModule } from './modules/expenses/expenses.module';
         type: 'postgres',
         url: config.getOrThrow<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
+        synchronize: false,
+        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+        migrationsRun: true,
       }),
     }),
     CommonModule,
+    TenantOrmModule,
     BusinessesModule,
     RbacModule,
     UsersModule,
     AuthModule,
     CategoriesModule,
-    AttributesModule,
     BrandsModule,
     ProductsModule,
     WarehousesModule,

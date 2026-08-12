@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
+import { TENANT_DATA_SOURCE } from '../../database/tenant/tenant-orm.module';
 import { TenantContext } from '../../common/tenant/tenant-context';
 import { TenantScopedService } from '../../common/tenant/tenant-scoped.service';
 import { Sale, SaleStatus, SalesChannel } from './entities/sale.entity';
@@ -27,6 +28,8 @@ import {
   PromotionType,
 } from '../promotions/entities/promotion.entity';
 import { LoyaltyPointsService } from '../loyalty/loyalty-points.service';
+import { CustomFieldsService } from '../custom-fields/custom-fields.service';
+import { CustomizableEntityType } from '../custom-fields/entities/custom-field-definition.entity';
 
 interface ResolvedLine {
   variantId?: string;
@@ -52,7 +55,7 @@ export class SalesService extends TenantScopedService<Sale> {
     @InjectRepository(Sale) repository: Repository<Sale>,
     @InjectRepository(SaleLine)
     private readonly saleLinesRepository: Repository<SaleLine>,
-    private readonly dataSource: DataSource,
+    @Inject(TENANT_DATA_SOURCE) private readonly dataSource: DataSource,
     private readonly warehousesService: WarehousesService,
     private readonly productsService: ProductsService,
     private readonly productVariantsService: ProductVariantsService,
@@ -62,6 +65,7 @@ export class SalesService extends TenantScopedService<Sale> {
     private readonly promotionsService: PromotionsService,
     private readonly loyaltyPointsService: LoyaltyPointsService,
     private readonly stockMovementsService: StockMovementsService,
+    private readonly customFieldsService: CustomFieldsService,
     tenantContext: TenantContext,
   ) {
     super(repository, tenantContext);
@@ -94,13 +98,16 @@ export class SalesService extends TenantScopedService<Sale> {
     );
     const totalDiscount = lineInputs.reduce((sum, l) => sum + l.discount, 0);
     const total = subtotal - totalDiscount;
+    const customFields = await this.customFieldsService.validate(
+      CustomizableEntityType.SALE,
+      dto.customFields,
+    );
 
     const sale = await this.dataSource.transaction(async (manager) => {
       const saleRepo = manager.getRepository(Sale);
 
       const sale = await saleRepo.save(
         saleRepo.create({
-          businessId: this.tenantContext.businessId,
           number: generateSaleNumber(),
           channel: dto.channel ?? SalesChannel.POS,
           customerId: dto.customerId ?? null,
@@ -116,6 +123,7 @@ export class SalesService extends TenantScopedService<Sale> {
           paidAmount: 0,
           status: SaleStatus.CONFIRMED,
           date: dto.date ? new Date(dto.date) : new Date(),
+          customFields,
         }),
       );
 

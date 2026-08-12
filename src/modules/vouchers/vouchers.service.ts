@@ -33,9 +33,7 @@ export class VouchersService extends TenantScopedService<Voucher> {
   }
 
   async findByCode(code: string): Promise<Voucher> {
-    const voucher = await this.repository.findOne({
-      where: { code, businessId: this.tenantContext.businessId },
-    });
+    const voucher = await this.repository.findOne({ where: { code } });
     if (!voucher) {
       throw new NotFoundException(`Voucher ${code} not found`);
     }

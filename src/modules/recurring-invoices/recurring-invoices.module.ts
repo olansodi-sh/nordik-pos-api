@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantOrmModule } from '../../database/tenant/tenant-orm.module';
 import { RecurringInvoice } from './entities/recurring-invoice.entity';
 import { RecurringInvoicesService } from './recurring-invoices.service';
 import { RecurringInvoicesController } from './recurring-invoices.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RecurringInvoice])],
+  imports: [TenantOrmModule.forFeature([RecurringInvoice])],
   controllers: [RecurringInvoicesController],
   providers: [RecurringInvoicesService],
-  exports: [RecurringInvoicesService, TypeOrmModule],
+  exports: [RecurringInvoicesService, TenantOrmModule],
 })
 export class RecurringInvoicesModule {}

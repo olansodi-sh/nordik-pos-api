@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { TenantBaseEntity } from '../../../common/entities/tenant-base.entity';
+import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum CreditNoteType {
   PARTIAL = 'partial',
@@ -7,7 +7,7 @@ export enum CreditNoteType {
 }
 
 @Entity('credit_notes')
-export class CreditNote extends TenantBaseEntity {
+export class CreditNote extends BaseEntity {
   @Column()
   number: string;
 
