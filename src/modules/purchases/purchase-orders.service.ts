@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
@@ -50,8 +50,7 @@ export class PurchaseOrdersService extends TenantScopedService<PurchaseOrder> {
       dto.lines.map((line) =>
         this.linesRepository.create({
           orderId: order.id,
-          variantId: line.variantId ?? null,
-          productId: line.productId ?? null,
+          productId: line.productId,
           description: line.description ?? '',
           quantity: line.quantity,
           unitCost: line.unitCost,

@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+﻿import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -13,13 +13,8 @@ import {
 import { CreditNoteType } from '../entities/credit-note.entity';
 
 export class RestockLineInputDto {
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsUUID()
   warehouseId: string;

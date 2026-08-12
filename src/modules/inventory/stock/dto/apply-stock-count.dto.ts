@@ -1,16 +1,11 @@
-import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+﻿import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class ApplyStockCountDto {
   @IsUUID()
   warehouseId: string;
 
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsNumber()
   @Min(0)

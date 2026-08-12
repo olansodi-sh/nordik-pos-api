@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+﻿import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -11,13 +11,8 @@ import {
 } from 'class-validator';
 
 export class CreateQuoteLineDto {
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsOptional()
   @IsString()

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
@@ -83,18 +83,15 @@ export class ReportsService {
       );
   }
 
-  /**
-   * Valorización de inventario. Solo cubre stock de variantes (que tienen
-   * `cost`); el stock de productos sin variantes no se incluye porque ese
-   * modelo aún no tiene un campo de costo propio.
-   */
+  // NOTA: Product ya no tiene un campo de costo propio (antes vivia en
+  // ProductVariant, ahora eliminado). Hasta que se agregue costo a Product,
+  // esta valorizacion reporta totalValue en cero para todo el stock; se
+  // mantiene el shape de la respuesta para no romper a los consumidores.
   async inventoryValuation() {
     const rows = await this.stockRepository
       .createQueryBuilder('stock')
-      .innerJoin('stock.variant', 'variant')
-      .innerJoin('variant.product', 'product')
       .select('stock."warehouseId"', 'warehouseId')
-      .addSelect('SUM(stock.quantity * variant.cost)', 'totalValue')
+      .addSelect('0', 'totalValue')
       .addSelect('SUM(stock.quantity)', 'totalUnits')
       .groupBy('stock."warehouseId"')
       .getRawMany<InventoryValuationRow>();

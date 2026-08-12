@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+﻿import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -14,13 +14,8 @@ import {
 import { RecurringInvoiceFrequency } from '../entities/recurring-invoice.entity';
 
 export class RecurringInvoiceLineInputDto {
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsNumber()
   @Min(0.01)

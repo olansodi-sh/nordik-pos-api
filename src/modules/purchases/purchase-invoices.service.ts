@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+﻿import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { TENANT_DATA_SOURCE } from '../../database/tenant/tenant-orm.module';
@@ -12,7 +12,6 @@ import { StockMovementsService } from '../inventory/stock/stock-movements.servic
 import { SuppliersService } from '../suppliers/suppliers.service';
 import { WarehousesService } from '../inventory/warehouses/warehouses.service';
 import { ProductsService } from '../products/products.service';
-import { ProductVariantsService } from '../products/product-variants.service';
 import { CreatePurchaseInvoiceDto } from './dto/create-purchase-invoice.dto';
 import { PurchaseLineInputDto } from './dto/purchase-line-input.dto';
 import { generateDocumentNumber } from '../../common/utils/document-number-generator.util';
@@ -27,7 +26,6 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     private readonly suppliersService: SuppliersService,
     private readonly warehousesService: WarehousesService,
     private readonly productsService: ProductsService,
-    private readonly productVariantsService: ProductVariantsService,
     private readonly stockMovementsService: StockMovementsService,
     tenantContext: TenantContext,
   ) {
@@ -78,8 +76,7 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
         await lineRepo.save(
           lineRepo.create({
             invoiceId: invoice.id,
-            variantId: line.variantId ?? null,
-            productId: line.productId ?? null,
+            productId: line.productId,
             description: line.description ?? '',
             quantity: line.quantity,
             unitCost: line.unitCost,
@@ -105,20 +102,7 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
   private async resolveTracksInventory(
     line: PurchaseLineInputDto,
   ): Promise<boolean> {
-    if (!line.variantId && !line.productId) {
-      throw new BadRequestException(
-        'Cada línea debe indicar variantId o productId',
-      );
-    }
-    if (line.variantId) {
-      const variant = await this.productVariantsService.findVariantByIdOrFail(
-        line.variantId,
-      );
-      return variant.product.tracksInventory;
-    }
-    const product = await this.productsService.findOneOrFail(
-      line.productId as string,
-    );
+    const product = await this.productsService.findOneOrFail(line.productId);
     return product.tracksInventory;
   }
 
@@ -129,9 +113,7 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     invoiceId: string,
     manager: EntityManager,
   ): Promise<void> {
-    const where = line.variantId
-      ? { variantId: line.variantId, warehouseId }
-      : { productId: line.productId, warehouseId };
+    const where = { productId: line.productId, warehouseId };
 
     let stock = await stockRepo.findOne({ where });
     const before = stock ? Number(stock.quantity) : 0;
@@ -142,8 +124,7 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     } else {
       stock = await stockRepo.save(
         stockRepo.create({
-          variantId: line.variantId ?? null,
-          productId: line.productId ?? null,
+          productId: line.productId,
           warehouseId,
           quantity: line.quantity,
         }),
@@ -153,7 +134,6 @@ export class PurchaseInvoicesService extends TenantScopedService<PurchaseInvoice
     await this.stockMovementsService.record(
       {
         businessId: this.tenantContext.businessId,
-        variantId: line.variantId,
         productId: line.productId,
         warehouseId,
         quantityDelta: line.quantity,

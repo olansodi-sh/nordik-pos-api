@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+﻿import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
@@ -56,8 +56,7 @@ export class QuotesService extends TenantScopedService<Quote> {
       dto.lines.map((line) =>
         this.linesRepository.create({
           quoteId: quote.id,
-          variantId: line.variantId ?? null,
-          productId: line.productId ?? null,
+          productId: line.productId,
           description: line.description ?? '',
           quantity: line.quantity,
           unitPrice: line.unitPrice,
@@ -74,7 +73,7 @@ export class QuotesService extends TenantScopedService<Quote> {
     return this.update(id, { status: dto.status });
   }
 
-  /** Convierte la cotización en una venta real, reutilizando la lógica de precios/stock de SalesService. */
+  // Convierte la cotización en una venta real, reutilizando la lógica de precios/stock de SalesService.
   async convertToSale(id: string, dto: ConvertQuoteDto) {
     const quote = await this.findOneOrFail(id);
     if (quote.status === QuoteStatus.CONVERTED) {
@@ -85,8 +84,7 @@ export class QuotesService extends TenantScopedService<Quote> {
 
     const lines = await this.linesRepository.find({ where: { quoteId: id } });
     const saleLines: CreateSaleLineDto[] = lines.map((line) => ({
-      variantId: line.variantId ?? undefined,
-      productId: line.productId ?? undefined,
+      productId: line.productId,
       quantity: Number(line.quantity),
       unitPrice: Number(line.unitPrice),
       discount: Number(line.discount),

@@ -1,31 +1,28 @@
-import { Client } from 'pg';
+﻿import { Client } from 'pg';
 
-/**
- * Runbook de la Fase 2: copia las filas de cada tabla tenant-scoped desde la
- * BD central hacia la BD física de cada inquilino, y verifica que los
- * conteos coincidan. NO borra ni modifica la BD de origen.
- *
- * Dos modos de tabla:
- *  - DIRECT_TABLES: tienen su propia columna "businessId" — se filtran/
- *    copian directamente. Seguro de re-correr (borra por businessId antes
- *    de insertar).
- *  - JOIN_TABLES: tablas hijas/de unión sin columna "businessId" propia
- *    (líneas de venta, adjuntos de producto, etc.) — se resuelven subiendo
- *    a su tabla padre (ver joinClause/businessIdExpr de cada una). Se
- *    insertan con ON CONFLICT DO NOTHING (todas tienen PK propia o
- *    compuesta), así que también es seguro re-correr. IMPORTANTE: deben
- *    procesarse DESPUÉS de que su(s) tabla(s) padre ya estén copiadas (los
- *    padres directos ya lo están por ir primero; dentro de JOIN_TABLES,
- *    product_variants va antes que product_barcodes, que depende de ella).
- *
- * No excluye la columna "businessId" al copiar (se incluye tal cual en las
- * tablas DIRECT — queda como dato histórico inerte en el destino, igual que
- * en el resto de la migración de la Fase 2).
- *
- * Uso:
- *   CENTRAL_URL=... TENANT_MAP='{"<businessId>":"<url-tenant>"}' \
- *   npx ts-node -r tsconfig-paths/register src/database/scripts/split-tenant-data.ts
- */
+// Runbook de la Fase 2: copia las filas de cada tabla tenant-scoped desde la
+// BD central hacia la BD física de cada inquilino, y verifica que los
+// conteos coincidan. NO borra ni modifica la BD de origen.
+//
+// Dos modos de tabla:
+//  - DIRECT_TABLES: tienen su propia columna "businessId" — se filtran/
+//    copian directamente. Seguro de re-correr (borra por businessId antes
+//    de insertar).
+//  - JOIN_TABLES: tablas hijas/de union sin columna "businessId" propia
+//    (lineas de venta, adjuntos de producto, etc.) — se resuelven subiendo
+//    a su tabla padre (ver joinClause/businessIdExpr de cada una). Se
+//    insertan con ON CONFLICT DO NOTHING (todas tienen PK propia o
+//    compuesta), asi que tambien es seguro re-correr. IMPORTANTE: deben
+//    procesarse DESPUES de que su(s) tabla(s) padre ya esten copiadas (los
+//    padres directos ya lo estan por ir primero).
+//
+// No excluye la columna "businessId" al copiar (se incluye tal cual en las
+// tablas DIRECT — queda como dato historico inerte en el destino, igual que
+// en el resto de la migracion de la Fase 2).
+//
+// Uso:
+//   CENTRAL_URL=... TENANT_MAP='{"<businessId>":"<url-tenant>"}' \
+//   npx ts-node -r tsconfig-paths/register src/database/scripts/split-tenant-data.ts
 
 const DIRECT_TABLES = [
   'brands',
@@ -64,31 +61,21 @@ interface JoinTableSpec {
   businessIdExpr: string;
 }
 
-// Orden importa: una tabla debe listarse después de aquellas de las que
-// depende su joinClause (ver comentario arriba sobre product_variants).
+// Orden importa: una tabla debe listarse despues de aquellas de las que
+// depende su joinClause.
 const JOIN_TABLES: JoinTableSpec[] = [
   { table: 'kit_components', joinClause: 'JOIN products p ON p.id = t."kitProductId"', businessIdExpr: 'p."businessId"' },
   { table: 'payment_allocations', joinClause: 'JOIN payments p ON p.id = t."paymentId"', businessIdExpr: 'p."businessId"' },
   { table: 'price_list_items', joinClause: 'JOIN price_lists p ON p.id = t."priceListId"', businessIdExpr: 'p."businessId"' },
   { table: 'product_images', joinClause: 'JOIN products p ON p.id = t."productId"', businessIdExpr: 'p."businessId"' },
-  { table: 'product_variants', joinClause: 'JOIN products p ON p.id = t."productId"', businessIdExpr: 'p."businessId"' },
-  {
-    table: 'product_barcodes',
-    // El código de barras cuelga de un producto O de una variante (nunca ambos).
-    joinClause: `
-      LEFT JOIN products p1 ON p1.id = t."productId"
-      LEFT JOIN product_variants pv ON pv.id = t."variantId"
-      LEFT JOIN products p2 ON p2.id = pv."productId"
-    `,
-    businessIdExpr: 'COALESCE(p1."businessId", p2."businessId")',
-  },
+  { table: 'product_barcodes', joinClause: 'JOIN products p ON p.id = t."productId"', businessIdExpr: 'p."businessId"' },
   { table: 'promotion_targets', joinClause: 'JOIN promotions p ON p.id = t."promotionId"', businessIdExpr: 'p."businessId"' },
   { table: 'purchase_invoice_lines', joinClause: 'JOIN purchase_invoices p ON p.id = t."invoiceId"', businessIdExpr: 'p."businessId"' },
   { table: 'purchase_order_lines', joinClause: 'JOIN purchase_orders p ON p.id = t."orderId"', businessIdExpr: 'p."businessId"' },
   { table: 'quote_lines', joinClause: 'JOIN quotes p ON p.id = t."quoteId"', businessIdExpr: 'p."businessId"' },
-  // Obsoleta desde que Role.permissionCodes reemplazó este join (ver
-  // migración RolePermissionCodes) — se incluye solo por completitud
-  // histórica; roles ya trae los permisos correctos por su cuenta.
+  // Obsoleta desde que Role.permissionCodes reemplazo este join (ver
+  // migracion RolePermissionCodes) — se incluye solo por completitud
+  // historica; roles ya trae los permisos correctos por su cuenta.
   { table: 'role_permissions', joinClause: 'JOIN roles p ON p.id = t."rolesId"', businessIdExpr: 'p."businessId"' },
   { table: 'sale_lines', joinClause: 'JOIN sales p ON p.id = t."saleId"', businessIdExpr: 'p."businessId"' },
   { table: 'sale_electronic_invoices', joinClause: 'JOIN sales p ON p.id = t."saleId"', businessIdExpr: 'p."businessId"' },
@@ -183,9 +170,9 @@ async function migrateBusiness(centralUrl: string, entry: TenantMapEntry): Promi
   await source.connect();
   await target.connect();
 
-  // Desactiva la validación de FKs/triggers durante la copia: las filas ya
+  // Desactiva la validacion de FKs/triggers durante la copia: las filas ya
   // son consistentes en el origen, no hace falta reproducir el orden de
-  // inserción entre tablas dependientes (aunque JOIN_TABLES igual respeta un
+  // insercion entre tablas dependientes (aunque JOIN_TABLES igual respeta un
   // orden razonable, por si esto se corre alguna vez con FKs activas).
   await target.query(`SET session_replication_role = 'replica';`);
 

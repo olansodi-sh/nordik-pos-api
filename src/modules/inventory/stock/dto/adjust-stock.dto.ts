@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsUUID } from 'class-validator';
+﻿import { IsEnum, IsNumber, IsUUID } from 'class-validator';
 
 export enum StockAdjustMode {
   SET = 'set',
@@ -9,13 +9,8 @@ export class AdjustStockDto {
   @IsUUID()
   warehouseId: string;
 
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsNumber()
   quantity: number;

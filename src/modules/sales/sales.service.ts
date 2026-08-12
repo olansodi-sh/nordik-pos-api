@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+﻿import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { TENANT_DATA_SOURCE } from '../../database/tenant/tenant-orm.module';
@@ -18,7 +18,6 @@ import { Stock } from '../inventory/stock/entities/stock.entity';
 import { StockMovementType } from '../inventory/stock/entities/stock-movement.entity';
 import { StockMovementsService } from '../inventory/stock/stock-movements.service';
 import { ProductsService } from '../products/products.service';
-import { ProductVariantsService } from '../products/product-variants.service';
 import { CustomersService } from '../customers/customers.service';
 import { PriceListsService } from '../pricing/price-lists.service';
 import { PriceListItemsService } from '../pricing/price-list-items.service';
@@ -32,8 +31,7 @@ import { CustomFieldsService } from '../custom-fields/custom-fields.service';
 import { CustomizableEntityType } from '../custom-fields/entities/custom-field-definition.entity';
 
 interface ResolvedLine {
-  variantId?: string;
-  productId?: string;
+  productId: string;
   name: string;
   categoryId?: string;
   tracksInventory: boolean;
@@ -58,7 +56,6 @@ export class SalesService extends TenantScopedService<Sale> {
     @Inject(TENANT_DATA_SOURCE) private readonly dataSource: DataSource,
     private readonly warehousesService: WarehousesService,
     private readonly productsService: ProductsService,
-    private readonly productVariantsService: ProductVariantsService,
     private readonly customersService: CustomersService,
     private readonly priceListsService: PriceListsService,
     private readonly priceListItemsService: PriceListItemsService,
@@ -208,18 +205,13 @@ export class SalesService extends TenantScopedService<Sale> {
       const stockRepo = manager.getRepository(Stock);
 
       for (const line of lines) {
-        const product = line.variantId
-          ? (
-              await this.productVariantsService.findVariantByIdOrFail(
-                line.variantId,
-              )
-            ).product
-          : await this.productsService.findOneOrFail(line.productId as string);
+        const product = await this.productsService.findOneOrFail(
+          line.productId,
+        );
 
         if (!product.tracksInventory) continue;
 
         await this.restockLine(stockRepo, manager, {
-          variantId: line.variantId,
           productId: line.productId,
           warehouseId: sale.warehouseId,
           quantity: Number(line.quantity),
@@ -249,8 +241,7 @@ export class SalesService extends TenantScopedService<Sale> {
       await lineRepo.save(
         lineRepo.create({
           saleId: sale.id,
-          variantId: input.resolved.variantId ?? null,
-          productId: input.resolved.productId ?? null,
+          productId: input.resolved.productId,
           description: input.resolved.name,
           quantity: input.quantity,
           unitPrice: input.unitPrice,
@@ -264,7 +255,6 @@ export class SalesService extends TenantScopedService<Sale> {
       if (input.resolved.tracksInventory) {
         await this.decrementStock(manager, stockRepo, {
           warehouseId,
-          variantId: input.resolved.variantId,
           productId: input.resolved.productId,
           quantity: input.quantity,
           productName: input.resolved.name,
@@ -302,7 +292,6 @@ export class SalesService extends TenantScopedService<Sale> {
         const listPrice = await this.priceListItemsService.resolvePrice(
           priceListId,
           {
-            variantId: resolved.variantId,
             productId: resolved.productId,
           },
         );
@@ -340,16 +329,13 @@ export class SalesService extends TenantScopedService<Sale> {
     stockRepo: Repository<Stock>,
     params: {
       warehouseId: string;
-      variantId?: string;
-      productId?: string;
+      productId: string;
       quantity: number;
       productName: string;
       saleId: string;
     },
   ): Promise<void> {
-    const where = params.variantId
-      ? { variantId: params.variantId, warehouseId: params.warehouseId }
-      : { productId: params.productId, warehouseId: params.warehouseId };
+    const where = { productId: params.productId, warehouseId: params.warehouseId };
 
     let stock = await stockRepo.findOne({ where });
     const currentQty = stock ? Number(stock.quantity) : 0;
@@ -368,8 +354,7 @@ export class SalesService extends TenantScopedService<Sale> {
       // si params.quantity > 0), pero se deja por completitud.
       stock = await stockRepo.save(
         stockRepo.create({
-          variantId: params.variantId ?? null,
-          productId: params.productId ?? null,
+          productId: params.productId,
           warehouseId: params.warehouseId,
           quantity: -params.quantity,
         }),
@@ -379,7 +364,6 @@ export class SalesService extends TenantScopedService<Sale> {
     await this.stockMovementsService.record(
       {
         businessId: this.tenantContext.businessId,
-        variantId: params.variantId,
         productId: params.productId,
         warehouseId: params.warehouseId,
         quantityDelta: -params.quantity,
@@ -397,19 +381,13 @@ export class SalesService extends TenantScopedService<Sale> {
     stockRepo: Repository<Stock>,
     manager: EntityManager,
     params: {
-      variantId?: string | null;
-      productId?: string | null;
+      productId: string;
       warehouseId: string;
       quantity: number;
       refId: string;
     },
   ): Promise<void> {
-    const where = params.variantId
-      ? { variantId: params.variantId, warehouseId: params.warehouseId }
-      : {
-          productId: params.productId ?? undefined,
-          warehouseId: params.warehouseId,
-        };
+    const where = { productId: params.productId, warehouseId: params.warehouseId };
 
     let stock = await stockRepo.findOne({ where });
     const before = stock ? Number(stock.quantity) : 0;
@@ -420,8 +398,7 @@ export class SalesService extends TenantScopedService<Sale> {
     } else {
       stock = await stockRepo.save(
         stockRepo.create({
-          variantId: params.variantId ?? null,
-          productId: params.productId ?? null,
+          productId: params.productId,
           warehouseId: params.warehouseId,
           quantity: params.quantity,
         }),
@@ -431,7 +408,6 @@ export class SalesService extends TenantScopedService<Sale> {
     await this.stockMovementsService.record(
       {
         businessId: this.tenantContext.businessId,
-        variantId: params.variantId,
         productId: params.productId,
         warehouseId: params.warehouseId,
         quantityDelta: params.quantity,
@@ -471,38 +447,7 @@ export class SalesService extends TenantScopedService<Sale> {
   }
 
   private async resolveLine(line: CreateSaleLineDto): Promise<ResolvedLine> {
-    if (!line.variantId && !line.productId) {
-      throw new BadRequestException(
-        'Cada línea debe indicar variantId o productId',
-      );
-    }
-    if (line.variantId && line.productId) {
-      throw new BadRequestException(
-        'Cada línea solo puede indicar variantId o productId',
-      );
-    }
-
-    if (line.variantId) {
-      const variant = await this.productVariantsService.findVariantByIdOrFail(
-        line.variantId,
-      );
-      return {
-        variantId: variant.id,
-        name: variant.product.name,
-        categoryId: variant.product.categoryId ?? undefined,
-        tracksInventory: variant.product.tracksInventory,
-        fallbackPrice: variant.listPrice ? Number(variant.listPrice) : 0,
-      };
-    }
-
-    const product = await this.productsService.findOneOrFail(
-      line.productId as string,
-    );
-    if (product.hasVariants) {
-      throw new BadRequestException(
-        `El producto ${product.name} maneja variantes: indica variantId en vez de productId`,
-      );
-    }
+    const product = await this.productsService.findOneOrFail(line.productId);
     return {
       productId: product.id,
       name: product.name,
@@ -518,7 +463,6 @@ export class SalesService extends TenantScopedService<Sale> {
     unitPrice: number,
   ): Promise<{ discount: number; promotionId: string | null }> {
     const promotions = await this.promotionsService.findApplicableForLine({
-      variantId: resolved.variantId,
       productId: resolved.productId,
       categoryId: resolved.categoryId,
     });

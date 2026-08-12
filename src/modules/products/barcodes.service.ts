@@ -1,4 +1,4 @@
-import {
+﻿import {
   ConflictException,
   Injectable,
   NotFoundException,
@@ -21,20 +21,18 @@ export class BarcodesService {
   ) {}
 
   /**
-   * Crea el código de barras principal de un producto o variante. Si no se
-   * provee uno, genera uno interno y reintenta ante una colisión de
-   * unicidad (poco probable, pero posible).
+   * Crea el código de barras principal de un producto. Si no se provee uno,
+   * genera uno interno y reintenta ante una colisión de unicidad (poco
+   * probable, pero posible).
    */
   async createBarcode(params: {
-    productId?: string;
-    variantId?: string;
+    productId: string;
     code?: string;
   }): Promise<ProductBarcode> {
     if (params.code) {
       return this.barcodesRepository.save(
         this.barcodesRepository.create({
-          productId: params.productId ?? null,
-          variantId: params.variantId ?? null,
+          productId: params.productId,
           code: params.code,
           isPrimary: true,
         }),
@@ -45,8 +43,7 @@ export class BarcodesService {
       try {
         return await this.barcodesRepository.save(
           this.barcodesRepository.create({
-            productId: params.productId ?? null,
-            variantId: params.variantId ?? null,
+            productId: params.productId,
             code: generateInternalBarcode(),
             isPrimary: true,
           }),
@@ -64,15 +61,15 @@ export class BarcodesService {
     throw new ConflictException('No se pudo generar un código de barras único');
   }
 
-  findByProductOrVariant(params: { productId?: string; variantId?: string }) {
-    return this.barcodesRepository.find({ where: params });
+  findByProduct(productId: string) {
+    return this.barcodesRepository.find({ where: { productId } });
   }
 
   /** Búsqueda por código para el punto de venta (escáner/lector). */
   async findByCode(code: string): Promise<ProductBarcode> {
     const barcode = await this.barcodesRepository.findOne({
       where: { code },
-      relations: { product: true, variant: { product: true } },
+      relations: { product: true },
     });
 
     if (!barcode) {

@@ -1,13 +1,8 @@
-import { IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+﻿import { IsNumber, IsUUID, Min } from 'class-validator';
 
 export class SetPriceListItemDto {
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsNumber()
   @Min(0)

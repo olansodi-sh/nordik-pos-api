@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+﻿import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum PromotionType {
@@ -11,7 +11,6 @@ export enum PromotionScope {
   ALL = 'all',
   CATEGORY = 'category',
   PRODUCT = 'product',
-  VARIANT = 'variant',
 }
 
 export interface BuyXGetYConditions {

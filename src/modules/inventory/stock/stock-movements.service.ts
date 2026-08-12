@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
@@ -15,8 +15,7 @@ import {
 } from './entities/stock-movement.entity';
 
 export interface RecordMovementParams {
-  variantId?: string | null;
-  productId?: string | null;
+  productId: string;
   warehouseId: string;
   quantityDelta: number;
   quantityAfter: number;
@@ -36,7 +35,6 @@ export class StockMovementsService {
     private readonly tenantContext: TenantContext,
   ) {}
 
-  /** Registra un movimiento; si se pasa `manager`, queda dentro de la misma transacción del caller. */
   async record(
     params: RecordMovementParams,
     manager?: EntityManager,
@@ -48,8 +46,6 @@ export class StockMovementsService {
     return repo.save(
       repo.create({
         ...params,
-        variantId: params.variantId ?? null,
-        productId: params.productId ?? null,
         reason: params.reason ?? null,
         refType: params.refType ?? null,
         refId: params.refId ?? null,
@@ -61,7 +57,6 @@ export class StockMovementsService {
 
   findAll(filters: {
     warehouseId?: string;
-    variantId?: string;
     productId?: string;
     type?: StockMovementType;
     from?: string;
@@ -71,7 +66,6 @@ export class StockMovementsService {
       businessId: this.tenantContext.businessId,
     };
     if (filters.warehouseId) where.warehouseId = filters.warehouseId;
-    if (filters.variantId) where.variantId = filters.variantId;
     if (filters.productId) where.productId = filters.productId;
     if (filters.type) where.type = filters.type;
     if (filters.from && filters.to) {
@@ -84,7 +78,7 @@ export class StockMovementsService {
 
     return this.movementsRepository.find({
       where,
-      order: { date: 'DESC' },
+      order: { date: "DESC" },
       take: 500,
     });
   }

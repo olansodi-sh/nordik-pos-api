@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { PriceListItem } from './entities/price-list-item.entity';
@@ -24,25 +24,16 @@ export class PriceListItemsService {
   ): Promise<PriceListItem> {
     await this.priceListsService.findOneOrFail(priceListId);
 
-    if (!dto.variantId && !dto.productId) {
-      throw new BadRequestException('Debes indicar variantId o productId');
-    }
-    if (dto.variantId && dto.productId) {
-      throw new BadRequestException(
-        'Solo puedes indicar uno: variantId o productId',
-      );
-    }
-
-    const where: FindOptionsWhere<PriceListItem> = dto.variantId
-      ? { priceListId, variantId: dto.variantId }
-      : { priceListId, productId: dto.productId };
+    const where: FindOptionsWhere<PriceListItem> = {
+      priceListId,
+      productId: dto.productId,
+    };
 
     let item = await this.itemsRepository.findOne({ where });
     if (!item) {
       item = this.itemsRepository.create({
         priceListId,
-        variantId: dto.variantId ?? null,
-        productId: dto.productId ?? null,
+        productId: dto.productId,
         price: dto.price,
       });
     } else {
@@ -52,16 +43,14 @@ export class PriceListItemsService {
     return this.itemsRepository.save(item);
   }
 
-  /** Usado por ventas: precio para una variante/producto en una lista dada. */
+  // Usado por ventas: precio para un producto en una lista dada.
   async resolvePrice(
     priceListId: string,
-    target: { variantId?: string; productId?: string },
+    target: { productId: string },
   ): Promise<number | null> {
-    const where: FindOptionsWhere<PriceListItem> = target.variantId
-      ? { priceListId, variantId: target.variantId }
-      : { priceListId, productId: target.productId };
-
-    const item = await this.itemsRepository.findOne({ where });
+    const item = await this.itemsRepository.findOne({
+      where: { priceListId, productId: target.productId },
+    });
     return item ? Number(item.price) : null;
   }
 }

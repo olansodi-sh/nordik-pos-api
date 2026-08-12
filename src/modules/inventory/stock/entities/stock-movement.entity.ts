@@ -1,4 +1,4 @@
-import { Column, Entity, Index } from 'typeorm';
+﻿import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from '../../../../common/entities/base.entity';
 
 export enum StockMovementType {
@@ -20,11 +20,8 @@ export class StockMovement extends BaseEntity {
   @Column({ name: 'businessId', type: 'uuid' })
   businessId: string;
 
-  @Column({ name: 'variantId', type: 'uuid', nullable: true })
-  variantId: string | null;
-
-  @Column({ name: 'productId', type: 'uuid', nullable: true })
-  productId: string | null;
+  @Column({ name: 'productId', type: 'uuid' })
+  productId: string;
 
   @Index()
   @Column({ name: 'warehouseId', type: 'uuid' })

@@ -1,5 +1,4 @@
-import {
-  Check,
+﻿import {
   Column,
   Entity,
   JoinColumn,
@@ -7,13 +6,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Product } from './product.entity';
-import { ProductVariant } from './product-variant.entity';
 
 @Entity('kit_components')
-@Check(
-  'chk_kit_component_owner',
-  `("componentVariantId" IS NOT NULL AND "componentProductId" IS NULL) OR ("componentVariantId" IS NULL AND "componentProductId" IS NOT NULL)`,
-)
 export class KitComponent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -25,19 +19,12 @@ export class KitComponent {
   @JoinColumn({ name: 'kitProductId' })
   kitProduct: Product;
 
-  @Column({ name: 'componentVariantId', type: 'uuid', nullable: true })
-  componentVariantId: string | null;
+  @Column({ name: 'componentProductId', type: 'uuid' })
+  componentProductId: string;
 
-  @ManyToOne(() => ProductVariant, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'componentVariantId' })
-  componentVariant: ProductVariant | null;
-
-  @Column({ name: 'componentProductId', type: 'uuid', nullable: true })
-  componentProductId: string | null;
-
-  @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'componentProductId' })
-  componentProduct: Product | null;
+  componentProduct: Product;
 
   @Column({ type: 'numeric', precision: 14, scale: 2, default: 1 })
   quantity: number;

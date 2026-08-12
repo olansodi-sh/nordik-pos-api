@@ -1,36 +1,20 @@
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+﻿import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../../common/entities/base.entity';
-import { ProductVariant } from '../../../products/entities/product-variant.entity';
 import { Product } from '../../../products/entities/product.entity';
 import { Warehouse } from '../../warehouses/entities/warehouse.entity';
 
 @Entity('stock')
-@Check(
-  'chk_stock_owner',
-  `("variantId" IS NOT NULL AND "productId" IS NULL) OR ("variantId" IS NULL AND "productId" IS NOT NULL)`,
-)
-@Index('uq_stock_variant_warehouse', ['variantId', 'warehouseId'], {
-  unique: true,
-})
 @Index('uq_stock_product_warehouse', ['productId', 'warehouseId'], {
   unique: true,
 })
 export class Stock extends BaseEntity {
   @Index()
-  @Column({ name: 'variantId', type: 'uuid', nullable: true })
-  variantId: string | null;
+  @Column({ name: 'productId', type: 'uuid' })
+  productId: string;
 
-  @ManyToOne(() => ProductVariant, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'variantId' })
-  variant: ProductVariant | null;
-
-  @Index()
-  @Column({ name: 'productId', type: 'uuid', nullable: true })
-  productId: string | null;
-
-  @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'productId' })
-  product: Product | null;
+  product: Product;
 
   @Index()
   @Column({ name: 'warehouseId', type: 'uuid' })

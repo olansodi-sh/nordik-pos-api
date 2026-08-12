@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+﻿import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
@@ -37,7 +37,6 @@ export class ProductsService extends TenantScopedService<Product> {
       brandId: dto.brandId ?? null,
       unit: dto.unit ?? 'unidad',
       tracksInventory: dto.tracksInventory ?? true,
-      hasVariants: dto.hasVariants ?? false,
       customFields,
     }).catch((error) => {
       if (this.isUniqueViolation(error)) {
@@ -48,12 +47,10 @@ export class ProductsService extends TenantScopedService<Product> {
       throw error;
     });
 
-    if (!product.hasVariants) {
-      await this.barcodesService.createBarcode({
-        productId: product.id,
-        code: dto.barcode,
-      });
-    }
+    await this.barcodesService.createBarcode({
+      productId: product.id,
+      code: dto.barcode,
+    });
 
     return product;
   }

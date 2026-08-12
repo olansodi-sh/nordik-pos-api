@@ -1,13 +1,8 @@
-import { IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+﻿import { IsNumber, IsUUID, Min } from 'class-validator';
 
 export class AddKitComponentDto {
-  @IsOptional()
   @IsUUID()
-  componentVariantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  componentProductId?: string;
+  componentProductId: string;
 
   @IsNumber()
   @Min(0.01)

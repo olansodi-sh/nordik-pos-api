@@ -1,14 +1,9 @@
-import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+﻿import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Quote } from './quote.entity';
-import { ProductVariant } from '../../products/entities/product-variant.entity';
 import { Product } from '../../products/entities/product.entity';
 
 @Entity('quote_lines')
-@Check(
-  'chk_quote_line_owner',
-  `("variantId" IS NOT NULL AND "productId" IS NULL) OR ("variantId" IS NULL AND "productId" IS NOT NULL)`,
-)
 export class QuoteLine extends BaseEntity {
   @Index()
   @Column({ name: 'quoteId', type: 'uuid' })
@@ -18,19 +13,12 @@ export class QuoteLine extends BaseEntity {
   @JoinColumn({ name: 'quoteId' })
   quote: Quote;
 
-  @Column({ name: 'variantId', type: 'uuid', nullable: true })
-  variantId: string | null;
+  @Column({ name: 'productId', type: 'uuid' })
+  productId: string;
 
-  @ManyToOne(() => ProductVariant, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'variantId' })
-  variant: ProductVariant | null;
-
-  @Column({ name: 'productId', type: 'uuid', nullable: true })
-  productId: string | null;
-
-  @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'productId' })
-  product: Product | null;
+  product: Product;
 
   @Column()
   description: string;

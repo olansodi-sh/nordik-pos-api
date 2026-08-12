@@ -1,10 +1,9 @@
-import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+﻿import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Promotion } from './promotion.entity';
 
 export enum PromotionTargetType {
   CATEGORY = 'category',
   PRODUCT = 'product',
-  VARIANT = 'variant',
 }
 
 @Entity('promotion_targets')

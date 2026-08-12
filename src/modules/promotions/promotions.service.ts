@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
@@ -82,14 +82,10 @@ export class PromotionsService extends TenantScopedService<Promotion> {
     return this.targetsRepository.find({ where: { promotionId } });
   }
 
-  /**
-   * Promociones activas aplicables a una línea de venta: alcance 'all', o
-   * alcance específico cuyo target coincide con la categoría/producto/
-   * variante de la línea.
-   */
+  // Promociones activas aplicables a una línea de venta: alcance 'all', o
+  // alcance específico cuyo target coincide con la categoría/producto de la línea.
   async findApplicableForLine(target: {
-    variantId?: string;
-    productId?: string;
+    productId: string;
     categoryId?: string;
   }): Promise<Promotion[]> {
     const now = new Date();
@@ -110,14 +106,11 @@ export class PromotionsService extends TenantScopedService<Promotion> {
       )
       .where('promotion.active = true')
       .andWhere(
-        `(target."targetType" = :variantType AND target."targetId" = :variantId)
-         OR (target."targetType" = :productType AND target."targetId" = :productId)
+        `(target."targetType" = :productType AND target."targetId" = :productId)
          OR (target."targetType" = :categoryType AND target."targetId" = :categoryId)`,
         {
-          variantType: PromotionTargetType.VARIANT,
-          variantId: target.variantId ?? null,
           productType: PromotionTargetType.PRODUCT,
-          productId: target.productId ?? null,
+          productId: target.productId,
           categoryType: PromotionTargetType.CATEGORY,
           categoryId: target.categoryId ?? null,
         },

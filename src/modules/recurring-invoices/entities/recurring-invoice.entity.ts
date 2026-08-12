@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+﻿import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 
 export enum RecurringInvoiceFrequency {
@@ -7,8 +7,7 @@ export enum RecurringInvoiceFrequency {
 }
 
 export interface RecurringInvoiceLine {
-  variantId?: string;
-  productId?: string;
+  productId: string;
   quantity: number;
   unitPrice: number;
 }

@@ -1,5 +1,4 @@
-import {
-  BadRequestException,
+﻿import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -27,23 +26,12 @@ export class KitComponentsService {
     dto: AddKitComponentDto,
   ): Promise<KitComponent> {
     await this.productsService.findOneOrFail(kitProductId);
-
-    if (!dto.componentVariantId && !dto.componentProductId) {
-      throw new BadRequestException(
-        'Debes indicar componentVariantId o componentProductId',
-      );
-    }
-    if (dto.componentVariantId && dto.componentProductId) {
-      throw new BadRequestException(
-        'Solo puedes indicar uno: componentVariantId o componentProductId',
-      );
-    }
+    await this.productsService.findOneOrFail(dto.componentProductId);
 
     return this.kitComponentsRepository.save(
       this.kitComponentsRepository.create({
         kitProductId,
-        componentVariantId: dto.componentVariantId ?? null,
-        componentProductId: dto.componentProductId ?? null,
+        componentProductId: dto.componentProductId,
         quantity: dto.quantity,
       }),
     );

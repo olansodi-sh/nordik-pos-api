@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+﻿import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -14,13 +14,8 @@ import {
 import { SalesChannel } from '../entities/sale.entity';
 
 export class CreateSaleLineDto {
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsNumber()
   @Min(0.01)

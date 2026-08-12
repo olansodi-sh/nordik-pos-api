@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantContext } from '../../common/tenant/tenant-context';
@@ -21,7 +21,7 @@ export class PriceListsService extends TenantScopedService<PriceList> {
     return this.repository.findOne({ where: { isDefault: true } });
   }
 
-  /** Clona los precios de una lista existente como punto de partida para una nueva. */
+  // Clona los precios de una lista existente como punto de partida para una nueva.
   async clone(sourceId: string, name: string): Promise<PriceList> {
     const source = await this.findOneOrFail(sourceId);
     const items = await this.itemsRepository.find({
@@ -35,7 +35,6 @@ export class PriceListsService extends TenantScopedService<PriceList> {
         items.map((item) =>
           this.itemsRepository.create({
             priceListId: clone.id,
-            variantId: item.variantId,
             productId: item.productId,
             price: item.price,
           }),

@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+﻿import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { TENANT_DATA_SOURCE } from '../../database/tenant/tenant-orm.module';
@@ -84,9 +84,7 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
     creditNoteId: string,
     manager: EntityManager,
   ): Promise<void> {
-    const where = line.variantId
-      ? { variantId: line.variantId, warehouseId: line.warehouseId }
-      : { productId: line.productId, warehouseId: line.warehouseId };
+    const where = { productId: line.productId, warehouseId: line.warehouseId };
 
     let stock = await stockRepo.findOne({ where });
     const before = stock ? Number(stock.quantity) : 0;
@@ -97,8 +95,7 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
     } else {
       stock = await stockRepo.save(
         stockRepo.create({
-          variantId: line.variantId ?? null,
-          productId: line.productId ?? null,
+          productId: line.productId,
           warehouseId: line.warehouseId,
           quantity: line.quantity,
         }),
@@ -108,7 +105,6 @@ export class CreditNotesService extends TenantScopedService<CreditNote> {
     await this.stockMovementsService.record(
       {
         businessId: this.tenantContext.businessId,
-        variantId: line.variantId,
         productId: line.productId,
         warehouseId: line.warehouseId,
         quantityDelta: line.quantity,

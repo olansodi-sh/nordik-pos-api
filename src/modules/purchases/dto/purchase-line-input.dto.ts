@@ -1,13 +1,8 @@
-import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+﻿import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class PurchaseLineInputDto {
-  @IsOptional()
   @IsUUID()
-  variantId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  productId?: string;
+  productId: string;
 
   @IsOptional()
   @IsString()

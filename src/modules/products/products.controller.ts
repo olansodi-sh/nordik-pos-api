@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Delete,
@@ -41,7 +41,7 @@ export class ProductsController {
   @RequirePermissions('catalog.read')
   @Get(':id/barcodes')
   findBarcodes(@Param('id') id: string) {
-    return this.barcodesService.findByProductOrVariant({ productId: id });
+    return this.barcodesService.findByProduct(id);
   }
 
   @RequirePermissions('catalog.write')

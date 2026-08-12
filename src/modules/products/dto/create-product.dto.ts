@@ -1,4 +1,4 @@
-import {
+﻿import {
   IsBoolean,
   IsObject,
   IsOptional,
@@ -36,11 +36,7 @@ export class CreateProductDto {
   @IsBoolean()
   tracksInventory?: boolean;
 
-  @IsOptional()
-  @IsBoolean()
-  hasVariants?: boolean;
-
-  // Solo aplica si hasVariants = false; si no se envía, se genera uno interno.
+  // Si no se envía, se genera uno interno.
   @IsOptional()
   @IsString()
   barcode?: string;

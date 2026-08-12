@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+﻿import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Category } from '../../catalog/categories/entities/category.entity';
 import { Brand } from '../../catalog/brands/entities/brand.entity';
@@ -35,9 +35,6 @@ export class Product extends BaseEntity {
 
   @Column({ name: 'tracksInventory', default: true })
   tracksInventory: boolean;
-
-  @Column({ name: 'hasVariants', default: false })
-  hasVariants: boolean;
 
   @Column({ default: true })
   active: boolean;
