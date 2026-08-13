@@ -134,20 +134,13 @@ export class RemoveProductVariants1786177000000 implements MigrationInterface {
 
     await queryRunner.query(`ALTER TABLE "products" DROP COLUMN IF EXISTS "hasVariants"`);
 
-    // Re-establish uniqueness now that productId is the sole owner column — these back the
-    // Stock/PriceListItem entity @Index(unique) decorators.
-    await queryRunner.query(
-      `CREATE UNIQUE INDEX "uq_stock_product_warehouse" ON "stock" ("productId", "warehouseId")`,
-    );
-    await queryRunner.query(
-      `CREATE UNIQUE INDEX "uq_price_list_product" ON "price_list_items" ("priceListId", "productId")`,
-    );
+    // Note: "uq_stock_product_warehouse" and "uq_price_list_product" already existed prior to
+    // this migration — the original polymorphic design had one unique index per owner column
+    // (product-owned and variant-owned rows each got their own uniqueness guarantee). Only the
+    // variant-owned indexes needed dropping above; the product-owned ones were never touched.
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."uq_price_list_product"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."uq_stock_product_warehouse"`);
-
     await queryRunner.query(`ALTER TABLE "products" ADD COLUMN "hasVariants" boolean NOT NULL DEFAULT false`);
     await queryRunner.query(`CREATE TABLE "product_variants" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "productId" uuid NOT NULL, "cost" numeric(14,2) NOT NULL DEFAULT '0', "listPrice" numeric(14,2), "discountPercent" numeric(5,2) NOT NULL DEFAULT '0', "active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_product_variants" PRIMARY KEY ("id"))`);
     await queryRunner.query(`CREATE INDEX "IDX_f515690c571a03400a9876600b" ON "product_variants" ("productId")`);
